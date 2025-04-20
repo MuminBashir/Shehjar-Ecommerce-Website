@@ -8,10 +8,10 @@ export default defineConfig({
     react(),
     VitePWA({
       manifest: {
-        name: "Shoptik",
-        short_name: "Shoptik",
+        name: "Shehjar",
+        short_name: "Shehjar",
         description:
-          "Find beautifully crafted furniture for your home at Shoptik.",
+          "Find beautifully crafted Kashmiri Products for yourself at Shehjar.",
         categories: ["shopping"],
         icons: [
           {
@@ -43,21 +43,21 @@ export default defineConfig({
             sizes: "800x600",
             platform: "android",
             label:
-              "Find beautifully crafted furniture for your home at Shoptik.",
+            "Find beautifully crafted Kashmiri Products for yourself at Shehjar.",
           },
           {
             src: "https://res.cloudinary.com/die12ywpb/image/upload/v1687669422/screenshot2_se3fi3.png",
             sizes: "1200x800",
             platform: "android",
             label:
-              "Find beautifully crafted furniture for your home at Shoptik.",
+            "Find beautifully crafted Kashmiri Products for yourself at Shehjar.",
           },
           {
             src: "https://res.cloudinary.com/die12ywpb/image/upload/v1687669423/screenshot3_crmnwv.png",
             sizes: "800x600",
             platform: "android",
             label:
-              "Find beautifully crafted furniture for your home at Shoptik.",
+            "Find beautifully crafted Kashmiri Products for yourself at Shehjar.",
           },
         ],
         theme_color: "#171717",
