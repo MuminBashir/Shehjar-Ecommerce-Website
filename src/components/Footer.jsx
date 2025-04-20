@@ -1,15 +1,15 @@
-import React from "react"
-import Blog_01 from "../assets/Blog1.webp"
-import Blog_02 from "../assets/Blog2.webp"
-import Blog_03 from "../assets/Blog3.webp"
-import { BsTelephone, BsBuilding } from "react-icons/bs"
+import React from "react";
+import Blog_01 from "../assets/Blog1.webp";
+import Blog_02 from "../assets/Blog2.webp";
+import Blog_03 from "../assets/Blog3.webp";
+import { BsTelephone, BsBuilding } from "react-icons/bs";
 import {
   AiOutlineFacebook,
   AiFillTwitterSquare,
   AiOutlineLinkedin,
   AiOutlineInstagram,
-} from "react-icons/ai"
-import { FiMail } from "react-icons/fi"
+} from "react-icons/ai";
+import { FiMail } from "react-icons/fi";
 
 const blog_data = [
   {
@@ -30,7 +30,7 @@ const blog_data = [
     date: "December 15, 2022",
     image: Blog_03,
   },
-]
+];
 
 const Footer = () => {
   return (
@@ -38,9 +38,10 @@ const Footer = () => {
       <footer className="container mx-auto mt-28 grid grid-cols-1 space-y-10 bg-primary px-5 py-8 tracking-wider text-white md:mt-28 md:grid-cols-4 md:space-y-0 xl:px-28 xl:py-20 ">
         {/* Shoptik */}
         <section className="space-y-4">
-          <h1 className="text-4xl font-black tracking-wider">Shoptik.</h1>
+          <h1 className="text-4xl font-black tracking-wider">Shehjar.</h1>
           <p className="w-2/3 text-sm font-light">
-            Explore the various kind of products for your Home, office and Room.
+            Explore the various kind of products crafted from the valley of
+            kashmir.
           </p>
         </section>
 
@@ -63,14 +64,14 @@ const Footer = () => {
                 {" "}
                 <FiMail />{" "}
               </span>
-              <span> shoptik@gmail.com</span>
+              <span> info@shehjar.com</span>
             </p>
             <p className="flex items-center space-x-1">
               <span>
                 {" "}
                 <BsBuilding />{" "}
               </span>
-              <span> 469, Hog Camp Road, California</span>
+              <span> Srinagar, Kashmir 190001</span>
             </p>
             <div className="flex space-x-6">
               <a href="#" aria-label="Facebook">
@@ -97,7 +98,7 @@ const Footer = () => {
           </div>
           <div className="flex flex-col space-y-4 text-sm font-light">
             <a href="#" className="hover:text-white/80">
-              About Shoptik
+              About Shehjar
             </a>
             <a href="#" className="hover:text-white/80">
               Contact us
@@ -106,13 +107,10 @@ const Footer = () => {
               FAQ
             </a>
             <a href="#" className="hover:text-white/80">
-              Supports
-            </a>
-            <a href="#" className="hover:text-white/80">
-              Blog
-            </a>
-            <a href="#" className="hover:text-white/80">
               Privacy Policy
+            </a>
+            <a href="#" className="hover:text-white/80">
+              Return Policy
             </a>
           </div>
         </section>
@@ -120,12 +118,12 @@ const Footer = () => {
         {/* Latest section */}
         <section className="space-y-6">
           <div className="space-y-1">
-            <h2 className="uppercase ">Latest news</h2>
+            <h2 className="uppercase ">Latest Blogs</h2>
             <div className="w-1/6 border-t"></div>
           </div>
           <div className="flex flex-col space-y-3 font-light ">
             {blog_data.map((item) => {
-              const { id, title, image, date } = item
+              const { id, title, image, date } = item;
               return (
                 <article
                   key={id}
@@ -145,13 +143,13 @@ const Footer = () => {
                     <p className="text-xs text-gray-200"> {date} </p>
                   </div>
                 </article>
-              )
+              );
             })}
           </div>
         </section>
       </footer>
     </>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

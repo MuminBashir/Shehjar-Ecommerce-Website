@@ -1,12 +1,12 @@
-import React from "react"
-import { ProductImage, Product_title } from "../components"
+import React from "react";
+import { ProductImage, Product_title } from "../components";
 
 const List_view_products = ({ products }) => {
   return (
     <>
       <section className=" grid grid-cols-1 gap-6">
         {products.map((product) => {
-          const { id } = product
+          const { id } = product;
           return (
             <article
               key={id}
@@ -20,11 +20,11 @@ const List_view_products = ({ products }) => {
                 <Product_title product={product} className="w-full" />
               </div>
             </article>
-          )
+          );
         })}
       </section>
     </>
-  )
-}
+  );
+};
 
-export default List_view_products
+export default List_view_products;

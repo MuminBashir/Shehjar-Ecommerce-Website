@@ -1,6 +1,6 @@
-import React from 'react'
-import BasketImage from "../assets/basketChair.webp"
-import { View_button } from "../components"
+import React from "react";
+import BasketImage from "../assets/basketChair.webp";
+import { View_button } from "../components";
 
 const Basket = () => {
   return (
@@ -27,7 +27,7 @@ const Basket = () => {
         className="absolute right-0 -top-40  mr-10 hidden h-80 w-72 object-cover object-center lg:flex xl:mr-32 xl:h-96 xl:w-80 "
       />
     </section>
-  )
-}
+  );
+};
 
-export default Basket
+export default Basket;

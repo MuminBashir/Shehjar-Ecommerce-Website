@@ -1,20 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap");
 
 @layer base {
-    body {
-      font-family: 'Roboto', sans-serif;
-      letter-spacing: .05em
-    }
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
+  body {
+    font-family: "Roboto", sans-serif;
+    letter-spacing: 0.05em;
   }
-
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 @tailwind base;
 @tailwind components;

@@ -1,8 +1,8 @@
-import React from "react"
-import { Link } from "react-router-dom"
+import React from "react";
+import { Link } from "react-router-dom";
 
 const ProductImage = ({ product, className }) => {
-  const { image, name, id } = product
+  const { image, name, id } = product;
   return (
     <>
       <Link to={`/shop/${id}`}>
@@ -17,7 +17,7 @@ const ProductImage = ({ product, className }) => {
         </div>
       </Link>
     </>
-  )
-}
+  );
+};
 
-export default ProductImage
+export default ProductImage;

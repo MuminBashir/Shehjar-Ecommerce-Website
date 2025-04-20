@@ -1,7 +1,7 @@
-import { Navbar, Footer } from "./components"
-import { BrowserRouter, Route, Routes } from "react-router-dom"
+import { Navbar, Footer } from "./components";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import ReactGA from "react-ga4"
+import ReactGA from "react-ga4";
 import {
   Cart,
   Home,
@@ -14,10 +14,10 @@ import {
   Services,
   SingleProduct,
   ProtectedRoute,
-} from "./pages"
-import { measurementID } from "./utils/constants"
+} from "./pages";
+import { measurementID } from "./utils/constants";
 
-ReactGA.initialize(measurementID)
+ReactGA.initialize(measurementID);
 
 function App() {
   return (
@@ -52,7 +52,7 @@ function App() {
       </Routes>
       <Footer />
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;

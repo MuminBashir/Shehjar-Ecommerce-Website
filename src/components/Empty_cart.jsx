@@ -1,6 +1,6 @@
-import React from "react"
-import Empty_Cart_Image from "../assets/undraw_empty_cart.svg"
-import { Link } from "react-router-dom"
+import React from "react";
+import Empty_Cart_Image from "../assets/undraw_empty_cart.svg";
+import { Link } from "react-router-dom";
 
 const Empty_cart = () => {
   return (
@@ -20,7 +20,7 @@ const Empty_cart = () => {
         </Link>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default Empty_cart
+export default Empty_cart;

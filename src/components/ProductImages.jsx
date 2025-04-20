@@ -1,8 +1,8 @@
-import React from "react"
-import { useState } from "react"
+import React from "react";
+import { useState } from "react";
 
 const ProductImages = ({ product, images = [{ url: "" }] }) => {
-  const [main, setMain] = useState(images[0])
+  const [main, setMain] = useState(images[0]);
   return (
     <>
       <section className={` space-y-4 `}>
@@ -32,12 +32,12 @@ const ProductImages = ({ product, images = [{ url: "" }] }) => {
                   } `}
                 />
               </div>
-            )
+            );
           })}
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default ProductImages
+export default ProductImages;

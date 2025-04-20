@@ -1,5 +1,5 @@
-import React from "react"
-import { Breadcrumb } from "../../components"
+import React from "react";
+import { Breadcrumb } from "../../components";
 
 const Features = () => {
   return (
@@ -9,7 +9,7 @@ const Features = () => {
         Coming Soon...
       </h1>
     </section>
-  )
-}
+  );
+};
 
-export default Features
+export default Features;

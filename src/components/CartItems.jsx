@@ -1,10 +1,10 @@
-import React from "react"
-import { BiMinus, BiPlus } from "react-icons/bi"
-import { useCartContext } from "../context/cart/cart_context"
-import { formatPrice } from "../utils/helper"
-import { Order_summary, ProductImage } from "../components"
+import React from "react";
+import { BiMinus, BiPlus } from "react-icons/bi";
+import { useCartContext } from "../context/cart/cart_context";
+import { formatPrice } from "../utils/helper";
+import { Order_summary, ProductImage } from "../components";
 const CartItems = () => {
-  const { cart, removeItem, toggleAmount, total_amount } = useCartContext()
+  const { cart, removeItem, toggleAmount, total_amount } = useCartContext();
 
   const beginCheckout = () => {
     trackGAEvent({
@@ -19,8 +19,8 @@ const CartItems = () => {
           quantity: item.amount,
         })),
       },
-    })
-  }
+    });
+  };
 
   return (
     <section className="container mx-auto mt-20 flex flex-col justify-between gap-28 px-5 md:items-center lg:flex-row lg:items-start lg:gap-10 xl:gap-28 xl:px-28 ">
@@ -39,7 +39,7 @@ const CartItems = () => {
         </div>
         {/* Cart content */}
         {cart.map((item) => {
-          const { amount, color, id, name, price, max } = item
+          const { amount, color, id, name, price, max } = item;
           return (
             <article key={id} className="relative mt-10 grid md:grid-cols-5  ">
               <div className=" col-span-2 grid grid-cols-2  gap-5 ">
@@ -136,14 +136,14 @@ const CartItems = () => {
                 {formatPrice(price * amount)}
               </p>
             </article>
-          )
+          );
         })}
       </div>
       {/* Left */}
       {/* Order summary */}
       <Order_summary beginCheckout={beginCheckout} />
     </section>
-  )
-}
+  );
+};
 
-export default CartItems
+export default CartItems;

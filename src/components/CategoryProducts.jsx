@@ -1,6 +1,6 @@
-import React from "react"
-import { ProductImage, Product_title } from "../components"
-import { View_button } from "../components"
+import React from "react";
+import { ProductImage, Product_title } from "../components";
+import { View_button } from "../components";
 
 const CategoryProducts = ({ products, category_name }) => {
   return (
@@ -18,7 +18,7 @@ const CategoryProducts = ({ products, category_name }) => {
           </div>
         </article>
         {products.slice(0, 3).map((product) => {
-          const { id, new_in_market, sale } = product
+          const { id, new_in_market, sale } = product;
           return (
             <article
               key={id}
@@ -37,11 +37,11 @@ const CategoryProducts = ({ products, category_name }) => {
                 </div>
               )}
             </article>
-          )
+          );
         })}
       </div>
     </>
-  )
-}
+  );
+};
 
-export default CategoryProducts
+export default CategoryProducts;

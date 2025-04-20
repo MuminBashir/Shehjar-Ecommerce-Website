@@ -1,9 +1,9 @@
-import React from 'react'
-import Instagram1 from "../assets/instaGram1.webp"
-import Instagram2 from "../assets/instaGram2.webp"
-import Instagram3 from "../assets/instaGram3.webp"
-import Instagram4 from "../assets/instaGram4.webp"
-import Blog3 from "../assets/Blog3.webp"
+import React from "react";
+import Instagram1 from "../assets/instaGram1.webp";
+import Instagram2 from "../assets/instaGram2.webp";
+import Instagram3 from "../assets/instaGram3.webp";
+import Instagram4 from "../assets/instaGram4.webp";
+import Blog3 from "../assets/Blog3.webp";
 
 const Instagram = () => {
   return (
@@ -41,7 +41,7 @@ const Instagram = () => {
         </h4>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default Instagram
+export default Instagram;

@@ -1,217 +1,280 @@
-import React, { useState } from "react"
-import { FaFilter, FaChevronRight } from "react-icons/fa"
-import { useFilterContext } from "../context/filter/filter_context"
-import { BsSearch, BsCheck } from "react-icons/bs"
-import { formatPrice, getUniqueValues } from "../utils/helper"
+import React, { useState, useEffect } from "react";
+import { FaFilter, FaChevronRight } from "react-icons/fa";
+import { useFilterContext } from "../context/filter/filter_context";
+import { formatPrice } from "../utils/helper";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../firebase/config"; // Adjust based on your firebase config
+
 const Sidebar_Filter = () => {
   const {
-    filters: {
-      category,
-      color,
-      company,
-      max_price,
-      min_price,
-      price,
-      shipping,
-      text,
-    },
+    filters: { categoryId, min_price, max_price, price_range },
     updateFilters,
     clearFilters,
-    all_products,
-  } = useFilterContext()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const categories = getUniqueValues(all_products, "category")
-  const companies = getUniqueValues(all_products, "company")
-  const colors = getUniqueValues(all_products, "colors")
+  } = useFilterContext();
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Local state for filter values before applying
+  const [localFilters, setLocalFilters] = useState({
+    categoryId: categoryId,
+    min_price: min_price,
+    max_price: max_price,
+  });
+
+  // Fetch categories from Firebase
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesRef = collection(db, "categories");
+        const snapshot = await getDocs(categoriesRef);
+        const categoriesData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          category_name: doc.data().category_name,
+        }));
+        setCategories(categoriesData);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Update local state when filters change
+  useEffect(() => {
+    setLocalFilters({
+      categoryId,
+      min_price,
+      max_price,
+    });
+  }, [categoryId, min_price, max_price]);
+
+  // Handle local filter changes
+  const handleLocalChange = (e) => {
+    const { name, value } = e.target;
+    setLocalFilters({
+      ...localFilters,
+      [name]: value,
+    });
+  };
+
+  // Apply filters to the context
+  const applyFilters = () => {
+    // Apply category filter
+    updateFilters({
+      target: {
+        name: "categoryId",
+        value: localFilters.categoryId,
+      },
+    });
+
+    // Apply min price filter if it has changed
+    if (localFilters.min_price !== min_price) {
+      updateFilters({
+        target: {
+          name: "min_price",
+          value:
+            localFilters.min_price === ""
+              ? null
+              : Number(localFilters.min_price),
+        },
+      });
+    }
+
+    // Apply max price filter if it has changed
+    if (localFilters.max_price !== max_price) {
+      updateFilters({
+        target: {
+          name: "max_price",
+          value:
+            localFilters.max_price === ""
+              ? null
+              : Number(localFilters.max_price),
+        },
+      });
+    }
+
+    // Close sidebar after applying filters
+    closeSidebar();
+  };
 
   // Close sidebar
   const closeSidebar = () => {
-    setIsSidebarOpen(false)
-  }
+    setIsSidebarOpen(false);
+  };
 
-  if (isSidebarOpen === true) {
-    document.body.classList.add("overflow-hidden")
-  } else {
-    document.body.classList.remove("overflow-hidden")
-  }
+  // Reset filters and local state
+  const handleClearFilters = () => {
+    clearFilters();
+    setLocalFilters({
+      categoryId: "",
+      min_price: null,
+      max_price: null,
+    });
+  };
+
+  // Toggle body overflow when sidebar is open
+  useEffect(() => {
+    if (isSidebarOpen === true) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+
+    // Cleanup when component unmounts
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [isSidebarOpen]);
 
   return (
     <>
       <aside
-        className={` z-50 lg:hidden ${
+        className={`z-50 lg:hidden ${
           isSidebarOpen
             ? "transition-all delay-150 duration-200 ease-out"
-            : "translate-x-full transform transition-all delay-150 duration-300 ease-out  "
-        } fixed top-0 right-0 h-full w-10/12 bg-white shadow-md md:w-1/2 `}
+            : "translate-x-full transform transition-all delay-150 duration-300 ease-out"
+        } fixed top-0 right-0 h-full w-10/12 bg-white shadow-md md:w-1/2`}
       >
-        <section className="scrollbar-hide h-full space-y-8 overflow-y-auto p-8 font-light ">
+        <section className="scrollbar-hide h-full space-y-8 overflow-y-auto p-8 font-light">
           <div className="flex justify-between">
-            <h2 className="text-xl uppercase ">Filter by</h2>
+            <h2 className="text-xl uppercase">Filter by</h2>
             <button
               className="text-sm capitalize text-primary"
               onClick={() => {
-                clearFilters()
-                closeSidebar()
+                handleClearFilters();
+                closeSidebar();
               }}
             >
               Clear all
             </button>
           </div>
-          {/* Search Product */}
-          <div className="relative text-gray-500 focus-within:text-black">
-            <input
-              type="text"
-              name="text"
-              placeholder="Search product..."
-              className=" w-full rounded-md border-gray-200  focus:border-primary focus:ring-1 focus:ring-primary "
-              value={text}
-              onChange={updateFilters}
-            />
-            <BsSearch className=" pointer-events-none absolute top-3 right-0 mr-5 h-4 w-4 " />
-          </div>
+
           {/* Categories */}
-          <div className=" space-y-2 ">
-            <h2 className=" font-medium capitalize tracking-wider">
-              Categories
-            </h2>
-            {categories.map((categoryButton, index) => {
-              return (
-                <div className="flex " key={index}>
-                  <button
-                    name="category"
-                    id="category"
-                    onClick={updateFilters}
-                    className={`text-lg capitalize  ${
-                      category === categoryButton ? "text-primary" : null
-                    } `}
-                  >
-                    {categoryButton}
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-          {/* company / Brand */}
-          <div className=" space-y-2 ">
-            <h2 className=" font-medium capitalize tracking-wider">Brand</h2>
+          <div className="space-y-2">
+            <h2 className="font-medium capitalize tracking-wider">Category</h2>
             <select
-              name="company"
-              value={company}
-              onChange={updateFilters}
-              className=" w-full rounded-md border-gray-200 capitalize focus:border-primary focus:ring-1  focus:ring-primary   "
+              name="categoryId"
+              value={localFilters.categoryId}
+              onChange={handleLocalChange}
+              className="w-full rounded-md border-gray-200 capitalize focus:border-primary focus:ring-1 focus:ring-primary"
+              disabled={loading}
             >
-              {companies.map((companyOption, index) => {
-                return (
-                  <option
-                    key={index}
-                    value={companyOption}
-                    className=" capitalize  "
-                  >
-                    {" "}
-                    {companyOption}{" "}
-                  </option>
-                )
-              })}
+              <option value="">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.category_name}
+                </option>
+              ))}
             </select>
+            {loading && (
+              <p className="text-sm text-gray-500">Loading categories...</p>
+            )}
           </div>
-          {/* Colors */}
-          <div className=" space-y-2 ">
-            <h2 className=" font-medium capitalize tracking-wider">Colors</h2>
-            <div className=" flex space-x-4 ">
-              {colors.map((colorButton, index) => {
-                if (colorButton === "all") {
-                  return (
-                    <button
-                      key={index}
-                      name="color"
-                      data-color="all"
-                      className={` ${
-                        color === colorButton
-                          ? " border-b-2 border-primary "
-                          : null
-                      } `}
-                      onClick={updateFilters}
-                    >
-                      {" "}
-                      All{" "}
-                    </button>
-                  )
-                }
-                return (
-                  <button
-                    key={index}
-                    name="color"
-                    data-color={colorButton}
-                    style={{ background: colorButton }}
-                    className=" h-6 w-6 border-2 border-gray-300  "
-                    onClick={updateFilters}
-                  >
-                    {color === colorButton ? (
-                      <BsCheck className=" h-5 w-5 text-white " />
-                    ) : null}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-          {/* Price */}
-          <div className="">
-            <div className="flex justify-between">
-              <label
-                htmlFor="price"
-                className=" font-medium capitalize tracking-wider"
-              >
-                price
+
+          {/* Price Range */}
+          <div className="space-y-4">
+            <h2 className="font-medium capitalize tracking-wider">
+              Price Range
+            </h2>
+
+            {/* Min Price */}
+            <div className="space-y-1">
+              <label htmlFor="mobile-min-price" className="text-sm">
+                Min Price
               </label>
+              <input
+                type="number"
+                name="min_price"
+                id="mobile-min-price"
+                value={
+                  localFilters.min_price === null ? "" : localFilters.min_price
+                }
+                onChange={handleLocalChange}
+                className="w-full rounded-md border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary"
+                min="0"
+                placeholder="0"
+              />
             </div>
-            <input
-              type="range"
-              name="price"
-              onChange={updateFilters}
-              min={min_price}
-              max={max_price}
-              value={price}
-              className=" w-full py-2 "
-            />
-            <p className="text-end"> {formatPrice(price)} </p>
+
+            {/* Max Price */}
+            <div className="space-y-1">
+              <label htmlFor="mobile-max-price" className="text-sm">
+                Max Price
+              </label>
+              <input
+                type="number"
+                name="max_price"
+                id="mobile-max-price"
+                value={
+                  localFilters.max_price === null ? "" : localFilters.max_price
+                }
+                onChange={handleLocalChange}
+                className="w-full rounded-md border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary"
+                min="0"
+                placeholder="Max"
+              />
+            </div>
+
+            {/* Price summary and reset */}
+            {price_range && (
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  {min_price !== null ? formatPrice(min_price) : "$0"} -{" "}
+                  {max_price !== null ? formatPrice(max_price) : "Any"}
+                </p>
+                <button
+                  onClick={() => {
+                    updateFilters({
+                      target: {
+                        name: "clear_price",
+                        value: true,
+                      },
+                    });
+                    setLocalFilters({
+                      ...localFilters,
+                      min_price: null,
+                      max_price: null,
+                    });
+                  }}
+                  className="text-xs text-primary"
+                >
+                  Reset price
+                </button>
+              </div>
+            )}
           </div>
-          {/* Shipping */}
-          <div className="group flex items-center space-x-5 capitalize">
-            <input
-              type="checkbox"
-              name="shipping"
-              id="shipping"
-              checked={shipping}
-              className=" h-4  w-4 cursor-pointer rounded outline-none focus:outline-none focus:ring-0   "
-              onChange={updateFilters}
-            />
-            <label
-              htmlFor="shipping"
-              className="  cursor-pointer select-none py-2 transition-all duration-200 ease-linear group-hover:text-primary "
-            >
-              {" "}
-              shipping{" "}
-            </label>
-          </div>
+
+          {/* Apply filters button */}
+          <button
+            onClick={applyFilters}
+            className="w-full rounded bg-primary py-2 text-white transition hover:bg-primary/90"
+          >
+            Apply Filters
+          </button>
         </section>
 
-        {/* Filter button */}
-        <div className={`absolute inset-y-1/2 -left-10`}>
+        {/* Filter toggle button */}
+        <div className="absolute inset-y-1/2 -left-10">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className=" bg-black px-3 py-3 hover:bg-primary"
+            className="bg-black px-3 py-3 hover:bg-primary"
+            aria-label={isSidebarOpen ? "Close filters" : "Open filters"}
           >
-            {" "}
             {isSidebarOpen ? (
-              <FaChevronRight className=" fill-white " />
+              <FaChevronRight className="fill-white" />
             ) : (
-              <FaFilter className=" fill-white " />
+              <FaFilter className="fill-white" />
             )}
           </button>
         </div>
       </aside>
     </>
-  )
-}
+  );
+};
 
-export default Sidebar_Filter
+export default Sidebar_Filter;

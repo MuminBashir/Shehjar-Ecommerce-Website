@@ -1,15 +1,15 @@
-import React from "react"
-import { useProductsContext } from "../context/product/products_context"
-import { CategoryProducts } from "../components"
+import React from "react";
+import { useProductsContext } from "../context/product/products_context";
+import { CategoryProducts } from "../components";
 const ProductCategory = () => {
-  const { products } = useProductsContext()
+  const { products } = useProductsContext();
 
   const all_Decoration_products = products.filter(
     (product) => product.category === "decoration"
-  )
+  );
   const all_Architect_products = products.filter(
     (product) => product.category === "architect"
-  )
+  );
 
   return (
     <>
@@ -26,7 +26,7 @@ const ProductCategory = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default ProductCategory
+export default ProductCategory;

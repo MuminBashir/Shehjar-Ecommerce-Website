@@ -1,9 +1,9 @@
-import React from "react"
-import { BsStarFill, BsStarHalf, BsStar } from "react-icons/bs"
+import React from "react";
+import { BsStarFill, BsStarHalf, BsStar } from "react-icons/bs";
 
 const Stars = ({ stars, reviews }) => {
   const tempStars = Array.from({ length: 5 }, (_, index) => {
-    const number = index + 0.5
+    const number = index + 0.5;
     return (
       <span key={index}>
         {stars > number ? (
@@ -14,8 +14,8 @@ const Stars = ({ stars, reviews }) => {
           <BsStar className="h-3 w-3 text-primary" />
         )}
       </span>
-    )
-  })
+    );
+  });
 
   return (
     <div className="flex items-center justify-center space-x-2 border px-2 py-1 text-sm hover:cursor-pointer">
@@ -28,7 +28,7 @@ const Stars = ({ stars, reviews }) => {
       </p>
       <p className="text-gray-500">{reviews} Reviews</p>
     </div>
-  )
-}
+  );
+};
 
-export default Stars
+export default Stars;

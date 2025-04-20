@@ -1,5 +1,5 @@
-import React from "react"
-import { Stripe_Checkout } from "../../components"
+import React from "react";
+import { Stripe_Checkout } from "../../components";
 
 const Checkout = () => {
   return (
@@ -8,7 +8,7 @@ const Checkout = () => {
         <Stripe_Checkout />
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Checkout
+export default Checkout;

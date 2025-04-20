@@ -1,36 +1,36 @@
-import React, { useState } from "react"
-import { BsCheck, BsCart2 } from "react-icons/bs"
-import { BiChevronDown, BiChevronUp } from "react-icons/bi"
-import { useCartContext } from "../context/cart/cart_context"
-import { Link } from "react-router-dom"
+import React, { useState } from "react";
+import { BsCheck, BsCart2 } from "react-icons/bs";
+import { BiChevronDown, BiChevronUp } from "react-icons/bi";
+import { useCartContext } from "../context/cart/cart_context";
+import { Link } from "react-router-dom";
 
 const AddToCart = ({ product }) => {
-  const { addToCart } = useCartContext()
-  const { id, colors, stock } = product
-  const [amount, setAmount] = useState(1)
-  const [mainColor, setMainColor] = useState(colors?.[0])
+  const { addToCart } = useCartContext();
+  const { id, colors, stock } = product;
+  const [amount, setAmount] = useState(1);
+  const [mainColor, setMainColor] = useState(colors?.[0]);
 
   // Increase Cart
   const increaseAmount = () => {
     setAmount((oldAmount) => {
-      let tempAmount = oldAmount + 1
+      let tempAmount = oldAmount + 1;
       if (tempAmount > stock) {
-        tempAmount = stock
+        tempAmount = stock;
       }
-      return tempAmount
-    })
-  }
+      return tempAmount;
+    });
+  };
 
   // Decrease Cart
   const decreaseAmount = () => {
     setAmount((oldAmount) => {
-      let tempAmount = oldAmount - 1
+      let tempAmount = oldAmount - 1;
       if (tempAmount < 1) {
-        tempAmount = 1
+        tempAmount = 1;
       }
-      return tempAmount
-    })
-  }
+      return tempAmount;
+    });
+  };
 
   return (
     <>
@@ -52,7 +52,7 @@ const AddToCart = ({ product }) => {
                   {" "}
                   {mainColor === colorButton ? <BsCheck /> : null}
                 </button>
-              )
+              );
             })}
           </div>
         </div>
@@ -113,7 +113,7 @@ const AddToCart = ({ product }) => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default AddToCart
+export default AddToCart;

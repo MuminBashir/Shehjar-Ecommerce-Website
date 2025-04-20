@@ -1,5 +1,5 @@
-import React from "react"
-import { Link } from "react-router-dom"
+import React from "react";
+import { Link } from "react-router-dom";
 
 const Breadcrumb = ({ title, product }) => {
   return (
@@ -11,7 +11,7 @@ const Breadcrumb = ({ title, product }) => {
         </h3>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Breadcrumb
+export default Breadcrumb;

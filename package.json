@@ -1,5 +1,5 @@
 {
-  "name": "Shoptik-ecommerce-web-app",
+  "name": "Shehjar-ecommerce-website",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,7 +8,8 @@
     "start": "netlify dev --targetPort 5173 ",
     "netlify": "netlify dev",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\""
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.0.0",
@@ -16,12 +17,18 @@
     "@stripe/stripe-js": "^1.46.0",
     "airtable-node": "^0.1.20",
     "axios": "^1.2.5",
+    "clsx": "^2.1.1",
     "dotenv": "^16.0.3",
+    "firebase": "^11.6.0",
+    "framer-motion": "^12.7.4",
+    "lucide-react": "^0.501.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-firebase-hooks": "^5.1.1",
     "react-ga4": "^2.1.0",
     "react-icons": "^4.4.0",
     "react-router-dom": "^6.4.2",
+    "react-simple-star-rating": "^5.1.7",
     "stripe": "^11.11.0"
   },
   "devDependencies": {
@@ -32,7 +39,7 @@
     "autoprefixer": "^10.4.12",
     "netlify-cli": "^12.9.2",
     "postcss": "^8.4.17",
-    "prettier": "^2.8.4",
+    "prettier": "^2.8.8",
     "prettier-plugin-tailwindcss": "^0.2.4",
     "tailwindcss": "^3.1.8",
     "vite": "^3.1.0",

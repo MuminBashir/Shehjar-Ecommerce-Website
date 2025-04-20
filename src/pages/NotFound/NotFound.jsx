@@ -1,6 +1,6 @@
-import React from "react"
-import { Link } from "react-router-dom"
-import PageNotFound from "../../assets/undraw_page_not_found.svg"
+import React from "react";
+import { Link } from "react-router-dom";
+import PageNotFound from "../../assets/undraw_page_not_found.svg";
 
 const NotFound = () => {
   return (
@@ -22,7 +22,7 @@ const NotFound = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default NotFound
+export default NotFound;

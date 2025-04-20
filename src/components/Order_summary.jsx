@@ -1,12 +1,12 @@
-import React from "react"
-import { useCartContext } from "../context/cart/cart_context"
-import { formatPrice } from "../utils/helper"
-import { Link } from "react-router-dom"
-import { useAuth0 } from "@auth0/auth0-react"
+import React from "react";
+import { useCartContext } from "../context/cart/cart_context";
+import { formatPrice } from "../utils/helper";
+import { Link } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const Order_summary = ({ beginCheckout }) => {
-  const { total_amount, shipping_fee, total_items } = useCartContext()
-  const { user, loginWithRedirect } = useAuth0()
+  const { total_amount, shipping_fee, total_items } = useCartContext();
+  const { user, loginWithRedirect } = useAuth0();
   return (
     <>
       <section className=" mb-5 md:mb-0 md:w-full lg:w-1/2  ">
@@ -72,7 +72,7 @@ const Order_summary = ({ beginCheckout }) => {
         )}
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Order_summary
+export default Order_summary;

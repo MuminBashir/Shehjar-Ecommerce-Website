@@ -1,5 +1,5 @@
-import React from "react"
-import { Link } from "react-router-dom"
+import React from "react";
+import { Link } from "react-router-dom";
 
 const View_button = ({ title, className }) => {
   return (
@@ -12,7 +12,7 @@ const View_button = ({ title, className }) => {
         </Link>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default View_button
+export default View_button;

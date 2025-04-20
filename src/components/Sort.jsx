@@ -1,7 +1,7 @@
-import React from "react"
-import { BsFillGrid3X3GapFill } from "react-icons/bs"
-import { FaThList } from "react-icons/fa"
-import { useFilterContext } from "../context/filter/filter_context"
+import React from "react";
+import { BsFillGrid3X3GapFill } from "react-icons/bs";
+import { FaThList } from "react-icons/fa";
+import { useFilterContext } from "../context/filter/filter_context";
 
 const Sort = () => {
   const {
@@ -11,7 +11,7 @@ const Sort = () => {
     setListView,
     sort,
     updateSort,
-  } = useFilterContext()
+  } = useFilterContext();
   return (
     <>
       {/* Total products count and sort filter */}
@@ -58,7 +58,7 @@ const Sort = () => {
         </form>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Sort
+export default Sort;

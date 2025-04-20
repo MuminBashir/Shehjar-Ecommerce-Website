@@ -1,11 +1,11 @@
-import React from "react"
-import { ProductImage, Product_title } from "../components"
+import React from "react";
+import { ProductImage, Product_title } from "../components";
 const Grid_view_products = ({ products }) => {
   return (
     <>
-      <section className=" grid grid-cols-2 md:grid-cols-3 gap-6">
+      <section className=" grid grid-cols-2 gap-6 md:grid-cols-3">
         {products.map((product) => {
-          const { id } = product
+          const { id } = product;
           return (
             <article key={id} className="group space-y-2 ">
               <ProductImage
@@ -17,11 +17,11 @@ const Grid_view_products = ({ products }) => {
                 className=" flex flex-col space-y-1  "
               />
             </article>
-          )
+          );
         })}
       </section>
     </>
-  )
-}
+  );
+};
 
-export default Grid_view_products
+export default Grid_view_products;

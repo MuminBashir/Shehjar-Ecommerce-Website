@@ -1,10 +1,10 @@
-import React from "react"
-import { CollectionProducts } from "../components"
-import { useProductsContext } from "../context/product/products_context"
+import React from "react";
+import { CollectionProducts } from "../components";
+import { useProductsContext } from "../context/product/products_context";
 
 const ProductGrid = () => {
   const { featured_products, newArrival_products, bestSeller_products } =
-    useProductsContext()
+    useProductsContext();
 
   return (
     <section className="container mx-auto mt-20 grid grid-cols-1 place-items-center gap-10 px-5 capitalize md:mt-28 md:grid-cols-3 xl:px-28 ">
@@ -17,7 +17,7 @@ const ProductGrid = () => {
       {/* Featured Products */}
       <CollectionProducts products={featured_products} title="Featured" />
     </section>
-  )
-}
+  );
+};
 
-export default ProductGrid
+export default ProductGrid;

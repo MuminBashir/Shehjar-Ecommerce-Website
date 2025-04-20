@@ -1,32 +1,32 @@
-import React, { useEffect } from "react"
-import { BsFillCheckCircleFill, BsArrowRight } from "react-icons/bs"
-import { Link, useNavigate, useSearchParams } from "react-router-dom"
-import { useCartContext } from "../../context/cart/cart_context"
-import { trackGAEvent } from "../../utils/helper"
+import React, { useEffect } from "react";
+import { BsFillCheckCircleFill, BsArrowRight } from "react-icons/bs";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useCartContext } from "../../context/cart/cart_context";
+import { trackGAEvent } from "../../utils/helper";
 
 const Completion = () => {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const paymentIntent = searchParams.get("payment_intent")
-  const { cart, total_amount, clearCart } = useCartContext()
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const paymentIntent = searchParams.get("payment_intent");
+  const { cart, total_amount, clearCart } = useCartContext();
 
   useEffect(() => {
     const timeId = setTimeout(() => {
-      clearCart()
-      navigate("/")
-    }, 10000)
+      clearCart();
+      navigate("/");
+    }, 10000);
     return () => {
-      clearTimeout(timeId)
-    }
-  }, [])
+      clearTimeout(timeId);
+    };
+  }, []);
 
   useEffect(() => {
     if (!paymentIntent) {
-      navigate("/")
-      return
+      navigate("/");
+      return;
     }
     if (paymentIntent) {
-      clearCart()
+      clearCart();
       trackGAEvent({
         event: "purchase",
         ecommerce: {
@@ -40,9 +40,9 @@ const Completion = () => {
             quantity: item.amount,
           })),
         },
-      })
+      });
     }
-  }, [paymentIntent])
+  }, [paymentIntent]);
 
   return (
     <section className=" container mx-auto my-20 grid place-items-center px-5 md:px-28">
@@ -78,7 +78,7 @@ const Completion = () => {
         </div>
       </article>
     </section>
-  )
-}
+  );
+};
 
-export default Completion
+export default Completion;

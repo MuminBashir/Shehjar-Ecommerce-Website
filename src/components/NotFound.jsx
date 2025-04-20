@@ -1,10 +1,10 @@
-import React from "react"
-import NotFoundProduct from "../assets/undraw_search_engine.svg"
-import { useFilterContext } from "../context/filter/filter_context"
+import React from "react";
+import NotFoundProduct from "../assets/undraw_search_engine.svg";
+import { useFilterContext } from "../context/filter/filter_context";
 const NotFound = () => {
   const {
     filters: { text },
-  } = useFilterContext()
+  } = useFilterContext();
   return (
     <section className=" grid place-items-center space-y-10 ">
       <h3 className=" mt-10 text-sm md:mt-24  ">
@@ -23,7 +23,7 @@ const NotFound = () => {
         </p>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default NotFound
+export default NotFound;

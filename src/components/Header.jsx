@@ -1,7 +1,7 @@
-import React from 'react'
-import Light1 from "../assets/light1.webp"
-import Light2 from "../assets/light2.webp"
-import { View_button } from "../components"
+import React from "react";
+import Light1 from "../assets/light1.webp";
+import Light2 from "../assets/light2.webp";
+import { View_button } from "../components";
 const Header = () => {
   return (
     <header className="container relative mx-auto flex overflow-hidden bg-[#d2e9e3] px-5 py-14 lg:py-20 xl:h-[28rem] xl:px-28">
@@ -29,7 +29,7 @@ const Header = () => {
         className=" absolute -top-32 -right-12 hidden w-80 scale-125 transform object-cover object-center md:-right-20 md:flex xl:-top-36 xl:right-20 xl:mr-28 xl:w-96"
       />
     </header>
-  )
-}
+  );
+};
 
-export default Header
+export default Header;

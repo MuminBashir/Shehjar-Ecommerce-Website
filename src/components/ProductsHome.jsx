@@ -1,6 +1,6 @@
-import React from 'react'
-import FiltersComponent from './Filters'
-import AllProducts from './AllProducts'
+import React from "react";
+import FiltersComponent from "./Filters";
+import AllProducts from "./AllProducts";
 
 const ProductsHome = () => {
   return (
@@ -10,7 +10,7 @@ const ProductsHome = () => {
         <AllProducts />
       </section>
     </>
-  )
-}
+  );
+};
 
-export default ProductsHome
+export default ProductsHome;

@@ -1,11 +1,11 @@
-import { useAuth0 } from "@auth0/auth0-react"
-import { BsCart2, BsPersonPlus, BsPersonDash } from "react-icons/bs"
-import { Link } from "react-router-dom"
-import { useCartContext } from "../context/cart/cart_context"
+import { useAuth0 } from "@auth0/auth0-react";
+import { BsCart2, BsPersonPlus, BsPersonDash } from "react-icons/bs";
+import { Link } from "react-router-dom";
+import { useCartContext } from "../context/cart/cart_context";
 
 const Cart_Button = () => {
-  const { user, loginWithRedirect, logout } = useAuth0()
-  const { total_items, clearCart } = useCartContext()
+  const { user, loginWithRedirect, logout } = useAuth0();
+  const { total_items, clearCart } = useCartContext();
   return (
     <>
       <div className="  flex space-x-8  md:space-x-8">
@@ -27,8 +27,8 @@ const Cart_Button = () => {
               title="Logout"
               className="flex hover:text-primary "
               onClick={() => {
-                clearCart()
-                logout({ logoutParams: { returnTo: window.location.origin } })
+                clearCart();
+                logout({ logoutParams: { returnTo: window.location.origin } });
               }}
             >
               <BsPersonDash className="h-6 w-6" />
@@ -45,7 +45,7 @@ const Cart_Button = () => {
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default Cart_Button
+export default Cart_Button;

@@ -1,25 +1,25 @@
-import React, { useEffect, useRef } from "react"
-import { Link } from "react-router-dom"
-import { BsX } from "react-icons/bs"
-import { Logo } from "../components"
-import { useProductsContext } from "../context/product/products_context"
-import { navLinks } from "../utils/constants"
+import React, { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import { BsX } from "react-icons/bs";
+import { Logo } from "../components";
+import { useProductsContext } from "../context/product/products_context";
+import { navLinks } from "../utils/constants";
 
 const Sidebar = () => {
-  const { closeSidebar } = useProductsContext()
-  const sidebarRef = useRef(null)
+  const { closeSidebar } = useProductsContext();
+  const sidebarRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
-        closeSidebar()
+        closeSidebar();
       }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
+    };
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  })
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  });
 
   return (
     <aside
@@ -37,7 +37,7 @@ const Sidebar = () => {
       </div>
       <div className=" text-sm uppercase  ">
         {navLinks.map((link) => {
-          const { id, title, url } = link
+          const { id, title, url } = link;
           return (
             <div
               key={id}
@@ -51,11 +51,11 @@ const Sidebar = () => {
                 {title}
               </Link>
             </div>
-          )
+          );
         })}
       </div>
     </aside>
-  )
-}
+  );
+};
 
-export default Sidebar
+export default Sidebar;

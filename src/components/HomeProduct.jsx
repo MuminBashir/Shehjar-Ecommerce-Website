@@ -1,21 +1,21 @@
-import React from "react"
-import { Link } from "react-router-dom"
-import { useProductsContext } from "../context/product/products_context"
-import { Loading, Error, ProductImage, Product_title } from "../components"
-import { useFilterContext } from "../context/filter/filter_context"
-import { getUniqueValues } from "../utils/helper"
+import React from "react";
+import { Link } from "react-router-dom";
+import { useProductsContext } from "../context/product/products_context";
+import { Loading, Error, ProductImage, Product_title } from "../components";
+import { useFilterContext } from "../context/filter/filter_context";
+import { getUniqueValues } from "../utils/helper";
 
 const HomeProduct = () => {
-  const { products_loading, products_error } = useProductsContext()
+  const { products_loading, products_error } = useProductsContext();
   const {
     filters: { category },
     all_products,
     updateFilters,
     filtered_products: products,
-  } = useFilterContext()
-  if (products_loading) return <Loading />
-  if (products_error) return <Error />
-  const categories = getUniqueValues(all_products, "category")
+  } = useFilterContext();
+  if (products_loading) return <Loading />;
+  if (products_error) return <Error />;
+  const categories = getUniqueValues(all_products, "category");
   return (
     <>
       <section className=" mt-20 md:mt-28 ">
@@ -28,7 +28,7 @@ const HomeProduct = () => {
                   name="category"
                   key={index}
                   onClick={(e) => {
-                    updateFilters(e)
+                    updateFilters(e);
                   }}
                   className={` snap-start text-start font-medium uppercase tracking-widest ${
                     category === categoryButton
@@ -38,7 +38,7 @@ const HomeProduct = () => {
                 >
                   {categoryButton}
                 </button>
-              )
+              );
             })}
           </div>
         </div>
@@ -46,7 +46,7 @@ const HomeProduct = () => {
         <div className="container mx-auto mt-10 px-5 xl:px-28">
           <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
             {products.slice(0, 8).map((product) => {
-              const { id, sale, new_in_market } = product
+              const { id, sale, new_in_market } = product;
               return (
                 <article key={id} className=" group relative space-y-5 ">
                   <ProductImage
@@ -65,7 +65,7 @@ const HomeProduct = () => {
                     </div>
                   )}
                 </article>
-              )
+              );
             })}
           </div>
 
@@ -82,7 +82,7 @@ const HomeProduct = () => {
         </div>
       </section>
     </>
-  )
-}
+  );
+};
 
-export default HomeProduct
+export default HomeProduct;
