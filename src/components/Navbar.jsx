@@ -5,6 +5,7 @@ import { Sidebar, Logo, Cart_Button } from "../components";
 import { useProductsContext } from "../context/product/products_context";
 import { navLinks } from "../utils/constants";
 import SearchBar from "./Searchbar";
+import UserBtn from "./UserBtn";
 
 const Navbar = () => {
   const { openSidebar, isSidebarOpen } = useProductsContext();
@@ -47,8 +48,9 @@ const Navbar = () => {
             <div className="flex w-full items-center justify-between md:w-auto">
               <Logo className="text-3xl" />
               {/* Mobile: Left side buttons and Menu button */}
-              <div className="flex items-center gap-4 md:hidden">
-                {/* Cart + Login (left side) */}
+              <div className="flex items-center gap-6 md:hidden">
+                {/* User Button + Cart (left side) */}
+                <UserBtn />
                 <Cart_Button />
                 {/* Menu button (rightmost) */}
                 <button
@@ -77,9 +79,10 @@ const Navbar = () => {
               ))}
             </div>
 
-            {/* Cart on desktop */}
-            <div className="hidden md:flex">
+            {/* User and Cart buttons on desktop */}
+            <div className="hidden items-center gap-8 md:flex">
               <Cart_Button />
+              <UserBtn />
             </div>
 
             {/* Mobile Search */}

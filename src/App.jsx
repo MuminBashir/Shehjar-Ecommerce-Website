@@ -1,5 +1,13 @@
 import { Navbar, Footer } from "./components";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import ReactGA from "react-ga4";
 import {
@@ -13,19 +21,40 @@ import {
   Products,
   Services,
   SingleProduct,
-  ProtectedRoute,
+  Login,
+  Profile,
 } from "./pages";
 import { measurementID } from "./utils/constants";
+import { useAuth } from "./context/auth/auth_context";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 ReactGA.initialize(measurementID);
 
-function App() {
+function AppContent() {
+  const location = useLocation();
+  const hideLayout = location.pathname === "/login";
+  const { currentUser } = useAuth();
+
+  // Redirect logged-in users away from /login
+  if (currentUser && location.pathname === "/login") {
+    return <Navigate to="/" replace />;
+  }
+
   return (
-    <BrowserRouter>
-      <Navbar />
+    <>
+      {!hideLayout && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/cart" element={<Cart />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/shop" element={<Products />} />
         <Route path="/shop/:id" element={<SingleProduct />} />
         <Route
@@ -44,13 +73,21 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route path="/features" element={<Features />} />
         <Route path="/services" element={<Services />} />
         <Route path="/news" element={<News />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <Footer />
+      {!hideLayout && <Footer />}
+      <ToastContainer position="top-center" autoClose={3000} />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }

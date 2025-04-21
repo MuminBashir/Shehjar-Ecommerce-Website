@@ -248,7 +248,7 @@ const SingleProduct = () => {
           </div>
 
           {/* Collapsible Size Chart */}
-          {productData.sizeChart && (
+          {productData.size_chart && (
             <div className="mt-4 border-t border-gray-200 pt-4">
               <button
                 className="flex w-full items-center justify-between py-2"
@@ -262,10 +262,13 @@ const SingleProduct = () => {
                 )}
               </button>
               {sizeChartOpen && (
-                <div
-                  className="mt-2 text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: productData.sizeChart }}
-                />
+                <div className="mt-2">
+                  <img
+                    src={productData.size_chart}
+                    alt="Size Chart"
+                    className="w-full max-w-md rounded border"
+                  />
+                </div>
               )}
             </div>
           )}

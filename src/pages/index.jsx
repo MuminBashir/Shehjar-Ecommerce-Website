@@ -9,6 +9,8 @@ import SingleProduct from "./Shop/SingleProduct/SingleProduct";
 import ProtectedRoute from "./ProtectedRoute";
 import Checkout from "./Checkout/Checkout";
 import NotFound from "./NotFound/NotFound";
+import Login from "./Login/Login";
+import Profile from "./Profile/Profile";
 
 export {
   Features,
@@ -22,4 +24,6 @@ export {
   SingleProduct,
   ProtectedRoute,
   NotFound,
+  Login,
+  Profile,
 };

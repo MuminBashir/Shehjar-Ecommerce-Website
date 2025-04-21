@@ -34,6 +34,7 @@ const AllProducts = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const genreParam = queryParams.get("genre");
+  const searchParam = queryParams.get("search");
 
   // State for handling pagination and data
   const [products, setProducts] = useState([]);
@@ -45,6 +46,7 @@ const AllProducts = () => {
   const [genreProductIds, setGenreProductIds] = useState(null);
   const [genreName, setGenreName] = useState(null);
   const [isGenreLoading, setIsGenreLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState(null);
   const itemsPerPage = 12;
 
   // For cursor-based pagination
@@ -59,9 +61,19 @@ const AllProducts = () => {
     price_range,
     sort,
     genreProductIds,
+    searchTerm,
   });
   const debounceTimerRef = useRef(null);
   const [debouncedFilters, setDebouncedFilters] = useState(filtersRef.current);
+
+  // Process search parameter
+  useEffect(() => {
+    if (searchParam) {
+      setSearchTerm(searchParam.toLowerCase().trim());
+    } else {
+      setSearchTerm(null);
+    }
+  }, [searchParam]);
 
   // Update filters ref when they change
   useEffect(() => {
@@ -72,6 +84,7 @@ const AllProducts = () => {
       price_range,
       sort,
       genreProductIds,
+      searchTerm,
     };
 
     // Debounce filter changes (300ms)
@@ -88,7 +101,15 @@ const AllProducts = () => {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [categoryId, min_price, max_price, price_range, sort, genreProductIds]);
+  }, [
+    categoryId,
+    min_price,
+    max_price,
+    price_range,
+    sort,
+    genreProductIds,
+    searchTerm,
+  ]);
 
   // Fetch genre product IDs if genre parameter exists
   useEffect(() => {
@@ -152,6 +173,14 @@ const AllProducts = () => {
         if (max_price !== null) {
           constraints.push(where("price", "<=", max_price));
         }
+      }
+
+      // Add search term filter if provided
+      if (searchTerm) {
+        // Create search tags based on first few characters of search term
+        // This follows the pattern in your search component
+        const tagPrefix = searchTerm.substring(0, 2);
+        constraints.push(where("tag", "array-contains", tagPrefix));
       }
 
       // Add specific batch of genre IDs if provided
@@ -231,6 +260,7 @@ const AllProducts = () => {
       price_range,
       sort,
       genreProductIds,
+      searchTerm,
       itemsPerPage,
     ]
   );
@@ -283,6 +313,13 @@ const AllProducts = () => {
             filteredCount = Math.round(filteredCount * pricePercentage);
           }
 
+          // Apply search filter estimation if needed
+          if (searchTerm) {
+            // Estimate for search term - this is a rough approximation
+            // In a real app, you might want to refine this estimation
+            filteredCount = Math.round(filteredCount * 0.2); // 20% match rate assumption
+          }
+
           setTotalItems(filteredCount);
           setTotalPages(Math.ceil(filteredCount / itemsPerPage));
           return;
@@ -315,6 +352,12 @@ const AllProducts = () => {
         }
       }
 
+      if (searchTerm) {
+        // Use the same search tag prefix approach for consistency
+        const tagPrefix = searchTerm.substring(0, 2);
+        constraints.push(where("tag", "array-contains", tagPrefix));
+      }
+
       let countQuery;
       if (constraints.length > 0) {
         countQuery = query(baseQuery, ...constraints);
@@ -339,6 +382,7 @@ const AllProducts = () => {
     min_price,
     max_price,
     price_range,
+    searchTerm,
     itemsPerPage,
   ]);
 
@@ -409,6 +453,15 @@ const AllProducts = () => {
             }
           }
 
+          if (searchTerm) {
+            // Use the same search tag approach
+            const tagPrefix = searchTerm.substring(0, 2);
+            batchQuery = query(
+              batchQuery,
+              where("tag", "array-contains", tagPrefix)
+            );
+          }
+
           // Execute query
           const batchSnapshot = await getDocs(batchQuery);
 
@@ -423,6 +476,17 @@ const AllProducts = () => {
 
         // Convert map to array
         let allProducts = Object.values(allProductsMap);
+
+        // Apply additional client-side filtering for search term
+        if (searchTerm) {
+          allProducts = allProducts.filter((product) => {
+            if (!product.name) return false;
+            const productNameLower = product.name.toLowerCase();
+            // Split search term into words and check if all are in the product name
+            const searchTerms = searchTerm.split(/\s+/);
+            return searchTerms.every((term) => productNameLower.includes(term));
+          });
+        }
 
         // Sort the combined results according to the selected sort option
         allProducts = sortProductsManually(
@@ -458,6 +522,7 @@ const AllProducts = () => {
       min_price,
       max_price,
       price_range,
+      searchTerm,
       sort,
       itemsPerPage,
     ]
@@ -493,6 +558,7 @@ const AllProducts = () => {
       "price_range",
       "sort",
       "genreProductIds",
+      "searchTerm",
     ];
 
     for (const key of keys) {
@@ -607,10 +673,23 @@ const AllProducts = () => {
           }
 
           // Extract product data
-          const productList = querySnapshot.docs.map((doc) => ({
+          let productList = querySnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
           }));
+
+          // Apply additional client-side filtering for search term
+          if (searchTerm) {
+            productList = productList.filter((product) => {
+              if (!product.name) return false;
+              const productNameLower = product.name.toLowerCase();
+              // Split search term into words and check if all are in the product name
+              const searchTerms = searchTerm.split(/\s+/);
+              return searchTerms.every((term) =>
+                productNameLower.includes(term)
+              );
+            });
+          }
 
           // Update state
           setProducts(productList);
@@ -677,10 +756,21 @@ const AllProducts = () => {
         }
 
         // Extract product data
-        const productList = querySnapshot.docs.map((doc) => ({
+        let productList = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
+
+        // Apply additional client-side filtering for search term
+        if (searchTerm) {
+          productList = productList.filter((product) => {
+            if (!product.name) return false;
+            const productNameLower = product.name.toLowerCase();
+            // Split search term into words and check if all are in the product name
+            const searchTerms = searchTerm.split(/\s+/);
+            return searchTerms.every((term) => productNameLower.includes(term));
+          });
+        }
 
         // Update state
         setProducts(productList);
@@ -698,6 +788,7 @@ const AllProducts = () => {
       genreProductIds,
       genreParam,
       isGenreLoading,
+      searchTerm,
     ]
   );
 
@@ -742,6 +833,11 @@ const AllProducts = () => {
           {genreParam && (
             <p className="text-sm text-gray-500">
               Filtered by genre: {isGenreLoading ? "loading..." : genreName}
+            </p>
+          )}
+          {searchTerm && (
+            <p className="text-sm text-gray-500">
+              Search results for: "{searchTerm}"
             </p>
           )}
         </div>
