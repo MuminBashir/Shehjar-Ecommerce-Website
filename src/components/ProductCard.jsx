@@ -27,22 +27,24 @@ const ProductCard = ({ product, listView }) => {
   const defaultColor = defaultCombination?.color || "";
   const availableQuantity = defaultCombination?.quantity || 0;
 
-  // GI Certified Tag Component
-  const GICertifiedTag = () => (
+  // GI Certified Seal Component
+  const GICertifiedSeal = () => (
     <div className="absolute right-0 top-0 z-10">
-      <div className="flex items-center justify-center bg-white px-3 py-1 shadow-lg">
-        <span
-          className="text-xs font-bold"
-          style={{
-            background: "linear-gradient(to right, #ff00cc, #3399ff, #00ff99)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            textShadow:
-              "0 0 5px rgba(255,105,180,0.7), 0 0 10px rgba(51,153,255,0.5), 0 0 15px rgba(0,255,153,0.5)",
-          }}
-        >
-          GI Certified
-        </span>
+      <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-red-800 bg-white shadow-lg">
+        <div className="flex h-12 w-12 flex-col items-center justify-center rounded-full border border-red-800">
+          <span
+            className="text-center text-xs font-bold text-red-800"
+            style={{ fontSize: "0.45rem", lineHeight: "0.6rem" }}
+          >
+            GI
+          </span>
+          <span
+            className="text-center text-xs font-bold text-red-800"
+            style={{ fontSize: "0.45rem", lineHeight: "0.6rem" }}
+          >
+            CERTIFIED
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -56,7 +58,7 @@ const ProductCard = ({ product, listView }) => {
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
-            {isGICertified && <GICertifiedTag />}
+            {isGICertified && <GICertifiedSeal />}
             <img
               src={isHovering && hoverImage ? hoverImage : thumbnail_image}
               alt={name}
@@ -106,7 +108,7 @@ const ProductCard = ({ product, listView }) => {
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
-          {isGICertified && <GICertifiedTag />}
+          {isGICertified && <GICertifiedSeal />}
           <img
             src={isHovering && hoverImage ? hoverImage : thumbnail_image}
             alt={name}
