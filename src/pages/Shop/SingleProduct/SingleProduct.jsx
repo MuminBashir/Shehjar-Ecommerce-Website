@@ -5,6 +5,7 @@ import { doc } from "firebase/firestore";
 import { db } from "../../../firebase/config";
 import ProductImageCarousel from "../ProductImageCarousel/ProductImageCarousel";
 import ProductReview from "../../../components/ProductReview";
+import { AddToCart } from "../../../components";
 import { Rating } from "react-simple-star-rating";
 import { IndianRupee, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -20,7 +21,6 @@ const SingleProduct = () => {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [availableQuantity, setAvailableQuantity] = useState(0);
-  const [quantity, setQuantity] = useState(1);
 
   // States for collapsible sections
   const [descriptionOpen, setDescriptionOpen] = useState(true);
@@ -71,17 +71,6 @@ const SingleProduct = () => {
     return sum / ratings.length;
   };
 
-  const handleAddToCart = () => {
-    if (availableQuantity > 0) {
-      console.log("Adding to cart:", {
-        productId: id,
-        selectedSize,
-        selectedColor,
-        quantity: 1,
-      });
-    }
-  };
-
   if (loading)
     return <div className="p-8 text-center">Loading product details...</div>;
   if (error)
@@ -99,12 +88,10 @@ const SingleProduct = () => {
 
   const setColour = (color) => {
     setSelectedColor(color);
-    setQuantity(1);
   };
 
   const setSize = (size) => {
     setSelectedSize(size);
-    setQuantity(1);
   };
 
   return (
@@ -140,18 +127,19 @@ const SingleProduct = () => {
               <IndianRupee size={20} className="inline" />
               {productData.price}
             </p>
-            <p className="mt-1 flex gap-1 text-sm text-gray-600">
+            {/* Fixed the nesting issue here */}
+            <div className="mt-1 flex gap-1 text-sm text-gray-600">
               Tax included{" "}
-              <div>
+              <span>
                 <Link
                   to="/shipping-policy"
                   className="text-primary underline hover:no-underline"
                 >
                   Shipping
                 </Link>
-              </div>{" "}
+              </span>{" "}
               calculated at checkout
-            </p>
+            </div>
           </div>
 
           {/* Size Selection */}
@@ -194,54 +182,16 @@ const SingleProduct = () => {
             )}
           </div>
 
-          {/* Add to Cart */}
-          {/* Quantity Selector and Add to Cart */}
-          <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-            {/* Quantity Selector */}
-            <div className="flex w-full max-w-[120px] items-center justify-between rounded-md border border-gray-300 px-2 py-2">
-              <button
-                className="text-lg font-semibold text-gray-600 disabled:opacity-30"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                disabled={quantity <= 1}
-              >
-                −
-              </button>
-              <span className="text-center font-medium">{quantity}</span>
-              <button
-                className="text-lg font-semibold text-gray-600 disabled:opacity-30"
-                onClick={() =>
-                  setQuantity((q) => Math.min(availableQuantity, q + 1))
-                }
-                disabled={quantity >= availableQuantity}
-              >
-                +
-              </button>
-            </div>
-
-            {/* Add to Cart Button */}
-            <button
-              className={`w-full rounded-md py-3 px-4 font-medium sm:w-auto ${
-                availableQuantity > 0
-                  ? "border border-primary bg-primary text-white transition-colors hover:bg-white hover:text-primary"
-                  : "cursor-not-allowed bg-gray-300 text-gray-500"
-              }`}
-              onClick={handleAddToCart}
-              disabled={availableQuantity <= 0}
-            >
-              {availableQuantity > 0 ? "Add to Cart" : "Out of Stock"}
-            </button>
-          </div>
-
-          {/* Availability */}
-          <div className="mt-4">
-            <p
-              className={`${
-                availableQuantity > 0 ? "text-green-600" : "text-red-600"
-              } text-md`}
-            >
-              {availableQuantity > 0 ? `In stock` : "Currently out of stock"}
-            </p>
-          </div>
+          {/* Add to Cart Component */}
+          <AddToCart
+            productId={id}
+            selectedSize={selectedSize}
+            selectedColor={selectedColor}
+            availableQuantity={availableQuantity}
+            productName={productData.name}
+            productImage={productData.images ? productData.images[0] : ""}
+            productPrice={productData.price}
+          />
 
           {/* Return Policy */}
           <div className="mt-4">

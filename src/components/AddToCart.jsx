@@ -1,118 +1,190 @@
-import React, { useState } from "react";
-import { BsCheck, BsCart2 } from "react-icons/bs";
-import { BiChevronDown, BiChevronUp } from "react-icons/bi";
-import { useCartContext } from "../context/cart/cart_context";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/config";
+import { useAuth } from "../context/auth/auth_context";
+import { toast } from "react-toastify";
 
-const AddToCart = ({ product }) => {
-  const { addToCart } = useCartContext();
-  const { id, colors, stock } = product;
-  const [amount, setAmount] = useState(1);
-  const [mainColor, setMainColor] = useState(colors?.[0]);
+const AddToCart = ({
+  productId,
+  selectedSize,
+  selectedColor,
+  availableQuantity,
+  isCard = false,
+}) => {
+  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const { currentUser } = useAuth();
 
-  // Increase Cart
-  const increaseAmount = () => {
-    setAmount((oldAmount) => {
-      let tempAmount = oldAmount + 1;
-      if (tempAmount > stock) {
-        tempAmount = stock;
-      }
-      return tempAmount;
-    });
+  // Reset quantity when product details change
+  useEffect(() => {
+    setQuantity(1);
+  }, [selectedSize, selectedColor]);
+
+  const addToLocalStorage = (cartItem) => {
+    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    // Check if same product with same options exists
+    const existingItemIndex = existingCart.findIndex(
+      (item) =>
+        item.product_id === productId &&
+        item.size === selectedSize &&
+        item.color === selectedColor
+    );
+
+    if (existingItemIndex !== -1) {
+      // Update existing item quantity
+      existingCart[existingItemIndex].quantity += quantity;
+    } else {
+      // Add new item
+      existingCart.push(cartItem);
+    }
+
+    localStorage.setItem("cart", JSON.stringify(existingCart));
   };
 
-  // Decrease Cart
-  const decreaseAmount = () => {
-    setAmount((oldAmount) => {
-      let tempAmount = oldAmount - 1;
-      if (tempAmount < 1) {
-        tempAmount = 1;
+  const addToUserCart = async () => {
+    try {
+      const userRef = doc(db, "users", currentUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        // Get current cart data
+        const userData = userSnap.data();
+        const currentCart = userData.cart || [];
+
+        // Check if item already exists
+        const existingItemIndex = currentCart.findIndex(
+          (item) =>
+            item.product_id === productId &&
+            item.size === selectedSize &&
+            item.color === selectedColor
+        );
+
+        let updatedCart;
+
+        if (existingItemIndex !== -1) {
+          // Create a new cart array with updated quantity
+          updatedCart = [...currentCart];
+          updatedCart[existingItemIndex] = {
+            ...updatedCart[existingItemIndex],
+            quantity: updatedCart[existingItemIndex].quantity + quantity,
+          };
+        } else {
+          // Add new item to cart with only the necessary fields
+          updatedCart = [
+            ...currentCart,
+            {
+              product_id: productId,
+              size: selectedSize,
+              color: selectedColor,
+              quantity,
+              created_at: new Date().toISOString(),
+            },
+          ];
+        }
+
+        // Update the entire cart array
+        await updateDoc(userRef, { cart: updatedCart });
+        return true;
       }
-      return tempAmount;
-    });
+      return false;
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      throw error;
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (availableQuantity <= 0 || loading) return;
+
+    setLoading(true);
+
+    const cartItem = {
+      product_id: productId,
+      size: selectedSize,
+      color: selectedColor,
+      quantity,
+      created_at: new Date().toISOString(),
+    };
+
+    try {
+      if (currentUser) {
+        const success = await addToUserCart();
+        if (success) {
+          toast.success("Added to cart successfully!");
+        } else {
+          toast.error("Failed to update cart. User data not found.");
+        }
+      } else {
+        addToLocalStorage(cartItem);
+        toast.success("Added to cart successfully!");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error(`Failed to add item to cart: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <>
-      <section className=" space-y-8 ">
-        {/* colors */}
-        <div className="flex items-center space-x-4">
-          <span className=" w-20 text-sm uppercase text-gray-500  ">
-            Color :
-          </span>
-          <div className="flex items-center justify-center space-x-4">
-            {colors?.map((colorButton, index) => {
-              return (
-                <button
-                  key={index}
-                  onClick={() => setMainColor(colorButton)}
-                  style={{ background: colorButton }}
-                  className={` flex h-5 w-5 items-center justify-center rounded-full text-white   `}
-                >
-                  {" "}
-                  {mainColor === colorButton ? <BsCheck /> : null}
-                </button>
-              );
-            })}
-          </div>
+    <div className="mt-6 flex flex-col gap-4">
+      {/* Quantity Selector and Add to Cart */}
+      <div
+        className={`flex flex-col gap-4 ${
+          isCard ? "" : "sm:flex-row sm:items-center"
+        }`}
+      >
+        {/* Quantity Selector */}
+        <div className="flex w-full max-w-[120px] items-center justify-between rounded-md border border-gray-300 px-2 py-2">
+          <button
+            className="text-lg font-semibold text-gray-600 disabled:opacity-30"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            disabled={quantity <= 1}
+          >
+            −
+          </button>
+          <span className="text-center font-medium">{quantity}</span>
+          <button
+            className="text-lg font-semibold text-gray-600 disabled:opacity-30"
+            onClick={() =>
+              setQuantity((q) => Math.min(availableQuantity, q + 1))
+            }
+            disabled={quantity >= availableQuantity}
+          >
+            +
+          </button>
         </div>
 
-        {/* Quantity */}
-        <div className="flex items-center space-x-4 ">
-          <label
-            htmlFor="quantity"
-            className=" w-20 text-sm uppercase text-gray-500  "
-          >
-            Quantity:
-          </label>
-          <div className=" relative flex  items-center justify-center ">
-            <input
-              name="quantity"
-              id="quantity"
-              type="number"
-              min={1}
-              max={10}
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              className=" h-[40px] w-16 border-gray-200 text-center outline-none focus:border-gray-200 focus:ring-0 disabled:cursor-not-allowed "
-              aria-label="Quantity"
-            />
-            <span className=" absolute -right-[23px] flex h-[40px] w-6 flex-col items-center justify-center  space-y-[0.5px] border  ">
-              <button
-                title="Increase"
-                className={`flex h-full w-full flex-col items-center justify-center border-b hover:bg-black`}
-                onClick={increaseAmount}
-              >
-                {" "}
-                <BiChevronUp className=" h-4 w-4 text-gray-500   hover:text-white" />{" "}
-              </button>
-              <button
-                title="Decrease"
-                className=" flex h-full w-full flex-col items-center justify-center border-t hover:bg-black "
-                onClick={decreaseAmount}
-              >
-                {" "}
-                <BiChevronDown className=" h-4 w-4 text-gray-500 hover:text-white  " />{" "}
-              </button>
-            </span>
-          </div>
-        </div>
-        {/* Add to cart Buttons */}
-        <div className="flex w-full  items-center justify-between xl:justify-start xl:space-x-8">
-          <Link
-            to="/cart"
-            className={`flex bg-black py-4 px-14 text-sm uppercase tracking-wider text-white hover:bg-primary   `}
-            onClick={() => addToCart(id, mainColor, amount, product)}
-          >
-            <span>
-              {" "}
-              <BsCart2 className="mr-1 h-4 w-6 " />{" "}
-            </span>
-            Add to Cart
-          </Link>
-        </div>
-      </section>
-    </>
+        {/* Add to Cart Button */}
+        <button
+          className={`w-full rounded-md py-3 px-4 font-medium sm:w-auto ${
+            availableQuantity > 0
+              ? "border border-primary bg-primary text-white transition-colors hover:bg-white hover:text-primary"
+              : "cursor-not-allowed bg-gray-300 text-gray-500"
+          }`}
+          onClick={handleAddToCart}
+          disabled={availableQuantity <= 0 || loading}
+        >
+          {loading
+            ? "Adding..."
+            : availableQuantity > 0
+            ? "Add to Cart"
+            : "Out of Stock"}
+        </button>
+      </div>
+
+      {/* Availability */}
+      <div className="mt-2">
+        <p
+          className={`${
+            availableQuantity > 0 ? "text-green-600" : "text-red-600"
+          } text-md`}
+        >
+          {availableQuantity > 0 ? `In stock` : "Currently out of stock"}
+        </p>
+      </div>
+    </div>
   );
 };
 

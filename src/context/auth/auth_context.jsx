@@ -45,6 +45,9 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
+      // Clear cart items from localStorage after successful login
+      localStorage.removeItem("cart");
+
       return user;
     } catch (error) {
       console.error("Error signing in with Google:", error);

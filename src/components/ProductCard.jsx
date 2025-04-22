@@ -1,19 +1,51 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { IndianRupee } from "lucide-react";
+import AddToCart from "./AddToCart"; // Adjust the import path as needed
 
 const ProductCard = ({ product, listView }) => {
   const [isHovering, setIsHovering] = useState(false);
 
   if (!product) return null;
 
-  const { id, name, price, thumbnail_image, zoomed_thumbnail_image } = product;
+  const {
+    id,
+    name,
+    price,
+    thumbnail_image,
+    zoomed_thumbnail_image,
+    combinations = [],
+    isGICertified,
+  } = product;
 
   const hoverImage = zoomed_thumbnail_image || thumbnail_image;
 
-  const handleAddToCart = () => {
-    console.log("Add to cart:", product); // Replace this with your actual action
-  };
+  // Get the first available combination for quick add
+  const defaultCombination =
+    combinations && combinations.length > 0 ? combinations[0] : null;
+  const defaultSize = defaultCombination?.size || "";
+  const defaultColor = defaultCombination?.color || "";
+  const availableQuantity = defaultCombination?.quantity || 0;
+
+  // GI Certified Tag Component
+  const GICertifiedTag = () => (
+    <div className="absolute right-0 top-0 z-10">
+      <div className="flex items-center justify-center bg-white px-3 py-1 shadow-lg">
+        <span
+          className="text-xs font-bold"
+          style={{
+            background: "linear-gradient(to right, #ff00cc, #3399ff, #00ff99)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            textShadow:
+              "0 0 5px rgba(255,105,180,0.7), 0 0 10px rgba(51,153,255,0.5), 0 0 15px rgba(0,255,153,0.5)",
+          }}
+        >
+          GI Certified
+        </span>
+      </div>
+    </div>
+  );
 
   if (listView) {
     return (
@@ -24,6 +56,7 @@ const ProductCard = ({ product, listView }) => {
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
+            {isGICertified && <GICertifiedTag />}
             <img
               src={isHovering && hoverImage ? hoverImage : thumbnail_image}
               alt={name}
@@ -41,13 +74,24 @@ const ProductCard = ({ product, listView }) => {
               <IndianRupee size={14} className="text-gray-900" />
               {price.toLocaleString()}
             </p>
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              className="mt-3 w-max rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white shadow hover:bg-primary/90"
-            >
-              Add to Cart
-            </button>
+
+            {defaultCombination ? (
+              <div className="mt-2 w-max">
+                <AddToCart
+                  productId={id}
+                  selectedSize={defaultSize}
+                  selectedColor={defaultColor}
+                  availableQuantity={availableQuantity}
+                />
+              </div>
+            ) : (
+              <Link
+                to={`/shop/${id}`}
+                className="mt-3 block w-max rounded-md bg-primary px-4 py-1.5 text-sm font-medium text-white shadow hover:bg-primary/90"
+              >
+                View Details
+              </Link>
+            )}
           </div>
         </Link>
       </div>
@@ -62,6 +106,7 @@ const ProductCard = ({ product, listView }) => {
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
+          {isGICertified && <GICertifiedTag />}
           <img
             src={isHovering && hoverImage ? hoverImage : thumbnail_image}
             alt={name}
@@ -81,13 +126,22 @@ const ProductCard = ({ product, listView }) => {
         </div>
       </Link>
       <div className="px-2">
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          className="mt-2 w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow hover:bg-primary/90"
-        >
-          Add to Cart
-        </button>
+        {defaultCombination ? (
+          <AddToCart
+            productId={id}
+            selectedSize={defaultSize}
+            selectedColor={defaultColor}
+            availableQuantity={availableQuantity}
+            isCard={true}
+          />
+        ) : (
+          <Link
+            to={`/shop/${id}`}
+            className="mt-2 block w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow hover:bg-primary/90"
+          >
+            View Details
+          </Link>
+        )}
       </div>
     </div>
   );
