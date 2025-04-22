@@ -9,6 +9,26 @@ import { AddToCart } from "../../../components";
 import { Rating } from "react-simple-star-rating";
 import { IndianRupee, ChevronDown, ChevronUp } from "lucide-react";
 
+// GI Certified Seal Component
+const GICertifiedSeal = () => (
+  <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-red-800 bg-white shadow-lg">
+    <div className="flex h-12 w-12 flex-col items-center justify-center rounded-full border border-red-800">
+      <span
+        className="text-center text-xs font-bold text-red-800"
+        style={{ fontSize: "0.45rem", lineHeight: "0.6rem" }}
+      >
+        GI
+      </span>
+      <span
+        className="text-center text-xs font-bold text-red-800"
+        style={{ fontSize: "0.45rem", lineHeight: "0.6rem" }}
+      >
+        CERTIFIED
+      </span>
+    </div>
+  </div>
+);
+
 const SingleProduct = () => {
   const { id } = useParams();
   const [product, loading, error] = useDocument(doc(db, "products", id));
@@ -104,8 +124,12 @@ const SingleProduct = () => {
 
         {/* Product Details */}
         <div className="md:w-1/2">
-          <h1 className="font-serif text-3xl font-bold">{productData.name}</h1>
-
+          <div className="flex flex-col gap-5 md:flex-row md:items-center">
+            <h1 className="font-serif text-3xl font-bold">
+              {productData.name}
+            </h1>
+            {productData.isGICertified && <GICertifiedSeal />}
+          </div>
           <div className="mt-2 flex items-center space-x-2">
             <div className="flex items-center">
               <Rating
