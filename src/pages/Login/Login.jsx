@@ -14,22 +14,10 @@ const Login = () => {
     try {
       setLoading(true);
       await signInWithGoogle();
-      toast.success("Logged in successfully!", {
-        position: "bottom-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-      });
+      toast.success("Logged in successfully!");
       navigate("/");
     } catch (err) {
-      toast.error("Failed to sign in with Google. Please try again.", {
-        position: "bottom-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-      });
+      toast.error("Failed to sign in with Google. Please try again.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -81,7 +69,17 @@ const Login = () => {
           </div>
 
           <div className="mt-6 text-center text-sm text-gray-500">
-            By signing in, you agree to our Terms of Service and Privacy Policy
+            By signing in, you agree to our{" "}
+            <a
+              href="/terms-and-conditions"
+              className="text-primary hover:underline"
+            >
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="/privacy-policy" className="text-primary hover:underline">
+              Privacy Policy
+            </a>
           </div>
         </div>
       </div>

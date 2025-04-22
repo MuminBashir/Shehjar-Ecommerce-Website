@@ -4,6 +4,7 @@ import { useDocument } from "react-firebase-hooks/firestore";
 import { doc } from "firebase/firestore";
 import { db } from "../../../firebase/config";
 import ProductImageCarousel from "../ProductImageCarousel/ProductImageCarousel";
+import ProductReview from "../../../components/ProductReview";
 import { Rating } from "react-simple-star-rating";
 import { IndianRupee, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -380,6 +381,12 @@ const SingleProduct = () => {
           )}
         </div>
       </div>
+
+      {/* Product Reviews Section */}
+      <ProductReview
+        productId={id}
+        productRatings={productData.ratings || []}
+      />
     </div>
   );
 };
