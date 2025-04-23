@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { IndianRupee } from "lucide-react";
+import { Rating } from "react-simple-star-rating";
 import AddToCart from "./AddToCart"; // Adjust the import path as needed
 
 const ProductCard = ({ product, listView }) => {
@@ -16,6 +17,7 @@ const ProductCard = ({ product, listView }) => {
     zoomed_thumbnail_image,
     combinations = [],
     isGICertified,
+    ratings = [],
   } = product;
 
   const hoverImage = zoomed_thumbnail_image || thumbnail_image;
@@ -26,6 +28,16 @@ const ProductCard = ({ product, listView }) => {
   const defaultSize = defaultCombination?.size || "";
   const defaultColor = defaultCombination?.color || "";
   const availableQuantity = defaultCombination?.quantity || 0;
+
+  // Calculate average rating
+  const calculateAverageRating = (ratings) => {
+    if (!ratings || ratings.length === 0) return 0;
+    const sum = ratings.reduce((total, rating) => total + rating.rate, 0);
+    return sum / ratings.length;
+  };
+
+  const averageRating = calculateAverageRating(ratings);
+  const totalRatings = ratings.length;
 
   // GI Certified Seal Component
   const GICertifiedSeal = () => (
@@ -77,6 +89,23 @@ const ProductCard = ({ product, listView }) => {
               {price.toLocaleString()}
             </p>
 
+            {/* Rating section */}
+            <div className="mt-2 flex items-center space-x-2">
+              <div className="flex items-center">
+                <Rating
+                  initialValue={Number(averageRating)}
+                  size={16}
+                  readonly
+                  allowFraction
+                  SVGstyle={{ display: "inline-block" }}
+                  fillColor="#FFDF00"
+                />
+              </div>
+              <span className="text-xs text-gray-600">
+                {totalRatings} {totalRatings === 1 ? "review" : "reviews"}
+              </span>
+            </div>
+
             {defaultCombination ? (
               <div className="mt-2 w-max">
                 <AddToCart
@@ -125,6 +154,23 @@ const ProductCard = ({ product, listView }) => {
             <IndianRupee size={14} className="text-gray-900" />
             {price.toLocaleString()}
           </p>
+
+          {/* Rating section */}
+          <div className="mt-2 flex flex-wrap items-center justify-center space-x-2">
+            <div className="flex items-center">
+              <Rating
+                initialValue={Number(averageRating)}
+                size={16}
+                readonly
+                allowFraction
+                SVGstyle={{ display: "inline-block" }}
+                fillColor="#FFDF00"
+              />
+            </div>
+            <span className="text-xs text-gray-600">
+              {totalRatings} {totalRatings === 1 ? "review" : "reviews"}
+            </span>
+          </div>
         </div>
       </Link>
       <div className="px-2">
