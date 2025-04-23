@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth/auth_context";
 import { toast } from "react-toastify";
+import googleLogo from "../../assets/googlelogo.webp";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -58,11 +59,7 @@ const Login = () => {
               {loading ? (
                 <span className="mr-2 inline-block h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-primary"></span>
               ) : (
-                <img
-                  src="src/assets/googlelogo.webp"
-                  alt="Google"
-                  className="h-5 w-5"
-                />
+                <img src={googleLogo} alt="Google" className="h-5 w-5" />
               )}
               {loading ? "Signing in..." : "Sign in with Google"}
             </button>
