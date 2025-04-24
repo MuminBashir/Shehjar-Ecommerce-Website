@@ -6,6 +6,7 @@ import { useProductsContext } from "../context/product/products_context";
 import { navLinks } from "../utils/constants";
 import SearchBar from "./Searchbar";
 import UserBtn from "./UserBtn";
+import SaleTopNavStrip from "./SaleTopNavStrip";
 
 const Navbar = () => {
   const { openSidebar, isSidebarOpen } = useProductsContext();
@@ -42,6 +43,9 @@ const Navbar = () => {
     }
   `}
       >
+        <div className="mb-2">
+          <SaleTopNavStrip />
+        </div>
         <div className="py-4 xl:py-8">
           <div className="container mx-auto flex flex-col items-center justify-center space-y-4 px-5 sm:space-y-4 md:flex-row md:justify-between md:space-y-0 xl:max-w-screen-xl xl:px-28">
             {/* Logo */}

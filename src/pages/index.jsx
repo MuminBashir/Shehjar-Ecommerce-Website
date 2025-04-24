@@ -13,6 +13,7 @@ import Login from "./Login/Login";
 import Profile from "./Profile/Profile";
 import ArtisansPage from "./Artisans/Artisans";
 import SingleArtisanPage from "./Artisans/SingleArtisan/SingleArtisan";
+import SalePage from "./Sale/Sale";
 
 export {
   Features,
@@ -30,4 +31,5 @@ export {
   Profile,
   ArtisansPage,
   SingleArtisanPage,
+  SalePage,
 };

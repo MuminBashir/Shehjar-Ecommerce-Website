@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useDocument } from "react-firebase-hooks/firestore";
 import { doc } from "firebase/firestore";
 import { db } from "../../../firebase/config";
+import { useSale } from "../../../context/sale/sale_context";
 import ProductImageCarousel from "../ProductImageCarousel/ProductImageCarousel";
 import ProductReview from "../../../components/ProductReview";
 import { AddToCart } from "../../../components";
@@ -29,8 +30,16 @@ const GICertifiedSeal = () => (
   </div>
 );
 
+// Sale Badge Component
+const SaleBadge = ({ discountPercentage }) => (
+  <div className="ml-3 flex items-center rounded-full bg-primary px-3 py-1 text-sm font-bold text-white">
+    {discountPercentage}% OFF
+  </div>
+);
+
 const SingleProduct = () => {
   const { id } = useParams();
+  const { currentSale, hasActiveSale } = useSale();
   const [product, loading, error] = useDocument(doc(db, "products", id));
   const [artisan, artisanLoading, artisanError] = useDocument(
     product?.data()?.artisan_id
@@ -119,6 +128,21 @@ const SingleProduct = () => {
   const averageRating = calculateAverageRating(productData.ratings);
   const totalRatings = productData.ratings ? productData.ratings.length : 0;
 
+  // Check if this product is on sale
+  const isOnSale =
+    hasActiveSale &&
+    currentSale?.product_ids?.includes(id) &&
+    currentSale?.discount_percentage > 0;
+
+  // Calculate the discounted price if the product is on sale
+  // Using Math.floor to round down to integer
+  const discountPercentage = isOnSale ? currentSale.discount_percentage : 0;
+  const discountedPrice = isOnSale
+    ? Math.floor(
+        productData.price - productData.price * (discountPercentage / 100)
+      )
+    : productData.price;
+
   const setColour = (color) => {
     setSelectedColor(color);
   };
@@ -141,7 +165,7 @@ const SingleProduct = () => {
             <h1 className="font-serif text-3xl font-bold">
               {productData.name}
             </h1>
-            {productData.isGICertified && <GICertifiedSeal />}
+            {productData.is_certified && <GICertifiedSeal />}
           </div>
           <div className="mt-2 flex items-center space-x-2">
             <div className="flex items-center">
@@ -160,10 +184,24 @@ const SingleProduct = () => {
           </div>
 
           <div className="mt-4">
-            <p className="text-2xl font-semibold">
-              <IndianRupee size={20} className="inline" />
-              {productData.price}
-            </p>
+            {isOnSale ? (
+              <div className="flex items-center gap-3">
+                <p className="text-2xl font-semibold text-primary">
+                  <IndianRupee size={20} className="inline text-primary" />
+                  {discountedPrice.toLocaleString()}
+                </p>
+                <p className="text-lg text-gray-500 line-through">
+                  <IndianRupee size={16} className="inline text-gray-500" />
+                  {productData.price.toLocaleString()}
+                </p>
+                <SaleBadge discountPercentage={discountPercentage} />
+              </div>
+            ) : (
+              <p className="text-2xl font-semibold">
+                <IndianRupee size={20} className="inline" />
+                {productData.price.toLocaleString()}
+              </p>
+            )}
             {/* Fixed the nesting issue here */}
             <div className="mt-1 flex gap-1 text-sm text-gray-600">
               Tax included{" "}
@@ -227,7 +265,7 @@ const SingleProduct = () => {
             availableQuantity={availableQuantity}
             productName={productData.name}
             productImage={productData.images ? productData.images[0] : ""}
-            productPrice={productData.price}
+            productPrice={isOnSale ? discountedPrice : productData.price}
           />
 
           {/* Return Policy */}

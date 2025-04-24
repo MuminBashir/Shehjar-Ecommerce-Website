@@ -10,6 +10,7 @@ const VideoPromotion = lazy(() => import("../../components/VideoPromotion"));
 const NewsLetterSubscribe = lazy(() =>
   import("../../components/NewsLetterSubscribe")
 );
+const SaleBanner = lazy(() => import("../../components/SaleBanner"));
 const HomeProduct = lazy(() => import("../../components/HomeProduct"));
 const BasketProduct = lazy(() => import("../../components/Basket"));
 const Header = lazy(() => import("../../components/Header"));
@@ -28,6 +29,7 @@ const Home = () => {
           <Carousel isMobile={true} />
         </div>
         <div className="mx-auto my-10 flex max-w-7xl flex-col gap-10">
+          <SaleBanner />
           <GenreList genre="NewArrival" title="NEW ARRIVALS" />
           <GenreList genre="BestSeller" title="BEST SELLERS" />
           <CategoryList />

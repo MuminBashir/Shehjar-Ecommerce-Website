@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { IndianRupee } from "lucide-react";
 import { Rating } from "react-simple-star-rating";
-import AddToCart from "./AddToCart"; // Adjust the import path as needed
+import AddToCart from "./AddToCart";
+import { useSale } from "../context/sale/sale_context";
 
 const ProductCard = ({ product, listView }) => {
   const [isHovering, setIsHovering] = useState(false);
+  const { currentSale, hasActiveSale } = useSale();
 
   if (!product) return null;
 
@@ -16,9 +18,22 @@ const ProductCard = ({ product, listView }) => {
     thumbnail_image,
     zoomed_thumbnail_image,
     combinations = [],
-    isGICertified,
+    is_certified,
     ratings = [],
   } = product;
+
+  // Check if this product is on sale
+  const isOnSale =
+    hasActiveSale &&
+    currentSale?.product_ids?.includes(id) &&
+    currentSale?.discount_percentage > 0;
+
+  // Calculate the discounted price if the product is on sale
+  // Using Math.floor to round down to integer
+  const discountPercentage = isOnSale ? currentSale.discount_percentage : 0;
+  const discountedPrice = isOnSale
+    ? Math.floor(price - price * (discountPercentage / 100))
+    : price;
 
   const hoverImage = zoomed_thumbnail_image || thumbnail_image;
 
@@ -61,6 +76,13 @@ const ProductCard = ({ product, listView }) => {
     </div>
   );
 
+  // Sale Badge Component
+  const SaleBadge = () => (
+    <div className="absolute left-0 top-0 z-10 m-2 bg-primary px-2 py-1 text-xs font-bold text-white shadow-md">
+      {discountPercentage}% OFF
+    </div>
+  );
+
   if (listView) {
     return (
       <div className="group flex w-full border-b border-gray-200 bg-white py-4">
@@ -70,7 +92,8 @@ const ProductCard = ({ product, listView }) => {
             onMouseEnter={() => setIsHovering(true)}
             onMouseLeave={() => setIsHovering(false)}
           >
-            {isGICertified && <GICertifiedSeal />}
+            {is_certified && <GICertifiedSeal />}
+            {isOnSale && <SaleBadge />}
             <img
               src={isHovering && hoverImage ? hoverImage : thumbnail_image}
               alt={name}
@@ -84,10 +107,25 @@ const ProductCard = ({ product, listView }) => {
             <h3 className="font-serif text-lg font-medium text-gray-800 transition-all duration-300 group-hover:text-primary">
               {name}
             </h3>
-            <p className="mt-1 flex items-center gap-1 font-semibold text-gray-900">
-              <IndianRupee size={14} className="text-gray-900" />
-              {price.toLocaleString()}
-            </p>
+            <div className="mt-1 flex items-center gap-2">
+              {isOnSale ? (
+                <>
+                  <p className="flex items-center gap-1 font-semibold text-primary">
+                    <IndianRupee size={14} className="text-primary" />
+                    {discountedPrice.toLocaleString()}
+                  </p>
+                  <p className="flex items-center gap-1 text-sm text-gray-500 line-through">
+                    <IndianRupee size={12} className="text-gray-500" />
+                    {price.toLocaleString()}
+                  </p>
+                </>
+              ) : (
+                <p className="flex items-center gap-1 font-semibold text-gray-900">
+                  <IndianRupee size={14} className="text-gray-900" />
+                  {price.toLocaleString()}
+                </p>
+              )}
+            </div>
 
             {/* Rating section */}
             <div className="mt-2 flex items-center space-x-2">
@@ -137,7 +175,8 @@ const ProductCard = ({ product, listView }) => {
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
-          {isGICertified && <GICertifiedSeal />}
+          {is_certified && <GICertifiedSeal />}
+          {isOnSale && <SaleBadge />}
           <img
             src={isHovering && hoverImage ? hoverImage : thumbnail_image}
             alt={name}
@@ -150,10 +189,25 @@ const ProductCard = ({ product, listView }) => {
           <h3 className="line-clamp-2 text-md mt-2 font-serif font-medium text-gray-800 transition-all duration-300 group-hover:underline group-hover:decoration-primary group-hover:underline-offset-4">
             {name}
           </h3>
-          <p className="mt-2 flex items-center justify-center gap-1 font-semibold text-gray-900">
-            <IndianRupee size={14} className="text-gray-900" />
-            {price.toLocaleString()}
-          </p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            {isOnSale ? (
+              <>
+                <p className="flex items-center gap-1 font-semibold text-primary">
+                  <IndianRupee size={14} className="text-primary" />
+                  {discountedPrice.toLocaleString()}
+                </p>
+                <p className="flex items-center gap-1 text-sm text-gray-500 line-through">
+                  <IndianRupee size={12} className="text-gray-500" />
+                  {price.toLocaleString()}
+                </p>
+              </>
+            ) : (
+              <p className="flex items-center gap-1 font-semibold text-gray-900">
+                <IndianRupee size={14} className="text-gray-900" />
+                {price.toLocaleString()}
+              </p>
+            )}
+          </div>
 
           {/* Rating section */}
           <div className="mt-2 flex flex-wrap items-center justify-center space-x-2">

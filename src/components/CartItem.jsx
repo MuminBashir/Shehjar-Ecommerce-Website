@@ -1,15 +1,32 @@
 import { IndianRupee, Trash2, Plus, Minus } from "lucide-react";
 import React, { useMemo } from "react";
 import { useCart } from "../context/cart/cart_context";
+import { useSale } from "../context/sale/sale_context";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 const CartItem = ({ item, onRemove }) => {
   const { product, quantity, size, color, product_id } = item;
   const { updateCartItemQuantity } = useCart();
+  const { currentSale, hasActiveSale } = useSale(); // Get sale information
 
   if (!product) {
     return null;
   }
+
+  // Calculate discounted price if product is on sale
+  const isOnSale = useMemo(() => {
+    return hasActiveSale && currentSale?.product_ids?.includes(product_id);
+  }, [hasActiveSale, currentSale, product_id]);
+
+  const discountPercentage = isOnSale
+    ? currentSale?.discount_percentage || 0
+    : 0;
+
+  const originalPrice = product.price;
+  const discountedPrice = isOnSale
+    ? Math.floor(originalPrice * (1 - discountPercentage / 100))
+    : originalPrice;
 
   // Find available quantity for this specific size and color combination
   const availableQuantity = useMemo(() => {
@@ -48,25 +65,52 @@ const CartItem = ({ item, onRemove }) => {
   return (
     <div className="flex flex-col rounded-lg border p-4 shadow-sm md:flex-row">
       <div className="mb-4 h-32 w-full flex-shrink-0 md:mb-0 md:w-32">
-        <img
-          src={product.thumbnail_image}
-          alt={product.name}
-          className="h-full w-full rounded-md object-cover"
-        />
+        <Link to={`/shop/${product_id}`}>
+          <img
+            src={product.thumbnail_image}
+            alt={product.name}
+            className="h-full w-full cursor-pointer rounded-md object-cover transition-transform hover:scale-105"
+          />
+        </Link>
       </div>
 
       <div className="flex flex-grow flex-col md:ml-6">
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-medium">{product.name}</h3>
+            <Link
+              to={`/shop/${product_id}`}
+              className="hover:text-primary hover:underline"
+            >
+              <h3 className="cursor-pointer text-lg font-medium">
+                {product.name}
+              </h3>
+            </Link>
             <div className="mt-1 text-sm text-gray-600">
               <span className="mr-4">Size: {size}</span>
               <span>Color: {color}</span>
             </div>
           </div>
           <div className="text-lg font-medium">
-            <IndianRupee size={16} className="inline" />
-            {product.price.toFixed(2)}
+            {isOnSale ? (
+              <>
+                <span className="text-red-600">
+                  <IndianRupee size={16} className="inline" />
+                  {discountedPrice}
+                </span>
+                <span className="ml-2 text-sm text-gray-500 line-through">
+                  <IndianRupee size={12} className="inline" />
+                  {originalPrice}
+                </span>
+                <span className="ml-2 text-xs text-green-600">
+                  {discountPercentage}% off
+                </span>
+              </>
+            ) : (
+              <>
+                <IndianRupee size={16} className="inline" />
+                {originalPrice}
+              </>
+            )}
           </div>
         </div>
 
@@ -98,8 +142,23 @@ const CartItem = ({ item, onRemove }) => {
 
         <div className="mt-auto flex items-center justify-between pt-4">
           <div className="text-lg font-medium">
-            <IndianRupee size={16} className="inline" />
-            {(product.price * quantity).toFixed(2)}
+            {isOnSale ? (
+              <>
+                <span className="text-red-600">
+                  <IndianRupee size={16} className="inline" />
+                  {discountedPrice * quantity}
+                </span>
+                <span className="ml-2 text-sm text-gray-500 line-through">
+                  <IndianRupee size={12} className="inline" />
+                  {originalPrice * quantity}
+                </span>
+              </>
+            ) : (
+              <>
+                <IndianRupee size={16} className="inline" />
+                {originalPrice * quantity}
+              </>
+            )}
           </div>
           <button
             onClick={onRemove}
