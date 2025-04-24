@@ -1,14 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import shehjarlogo from "../assets/shehjarlogo.png";
 
 const Logo = ({ className }) => {
   return (
     <Link to="/">
       <h1
-        className={`relative flex  pr-3 font-extrabold tracking-widest  text-black md:text-3xl ${className} `}
+        className={`relative flex pr-3 font-extrabold tracking-widest  text-black md:text-3xl ${className} `}
       >
-        Shehjar
-        <span className="absolute right-[5px] bottom-2 h-[6px] w-[6px] bg-primary "></span>
+        <img src={shehjarlogo} alt="Shehjar" width={120} height={120} />
       </h1>
     </Link>
   );

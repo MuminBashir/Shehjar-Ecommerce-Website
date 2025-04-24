@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth/auth_context";
 import { toast } from "react-toastify";
 import googleLogo from "../../assets/googlelogo.webp";
+import shehjarlogo from "../../assets/shehjarlogo.png";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -41,8 +42,8 @@ const Login = () => {
         <div className="w-full max-w-md">
           <div className="mb-8 text-center">
             <div className="mb-4 flex justify-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-                <span className="font-bold text-white">S</span>
+              <div className="flex items-center justify-center">
+                <img src={shehjarlogo} alt="Shehjar" width={120} height={120} />
               </div>
             </div>
             <h2 className="text-2xl font-bold">Welcome To Shehjar</h2>
