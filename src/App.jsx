@@ -23,6 +23,8 @@ import {
   SingleProduct,
   Login,
   Profile,
+  ArtisansPage,
+  SingleArtisanPage,
 } from "./pages";
 import { measurementID } from "./utils/constants";
 import { useAuth } from "./context/auth/auth_context";
@@ -57,6 +59,8 @@ function AppContent() {
         />
         <Route path="/shop" element={<Products />} />
         <Route path="/shop/:id" element={<SingleProduct />} />
+        <Route path="/artisans" element={<ArtisansPage />} />
+        <Route path="/artisan/:id" element={<SingleArtisanPage />} />
         <Route
           path="/checkout"
           element={

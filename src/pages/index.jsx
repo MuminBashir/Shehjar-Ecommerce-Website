@@ -11,6 +11,8 @@ import Checkout from "./Checkout/Checkout";
 import NotFound from "./NotFound/NotFound";
 import Login from "./Login/Login";
 import Profile from "./Profile/Profile";
+import ArtisansPage from "./Artisans/Artisans";
+import SingleArtisanPage from "./Artisans/SingleArtisan/SingleArtisan";
 
 export {
   Features,
@@ -26,4 +28,6 @@ export {
   NotFound,
   Login,
   Profile,
+  ArtisansPage,
+  SingleArtisanPage,
 };
