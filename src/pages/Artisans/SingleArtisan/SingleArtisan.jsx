@@ -16,6 +16,7 @@ import {
 } from "react-share";
 import RelatedArtisans from "../../../components/RelatedArtisans";
 import { ArrowLeft, Loader, Phone, MapPin, Calendar } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SingleArtisanPage = () => {
   const { id } = useParams();
@@ -32,36 +33,94 @@ const SingleArtisanPage = () => {
     window.scrollTo(0, 0);
   }, []);
 
+  // Animation variants
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut",
+      },
+    },
+  };
+
+  const staggerContainer = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
+    },
+  };
+
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <motion.div
+        className="flex min-h-screen items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <Loader className="h-12 w-12 animate-spin text-primary" />
-      </div>
+      </motion.div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <motion.div
+        className="flex min-h-screen items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="text-red-500">Error: {error.message}</div>
-      </div>
+      </motion.div>
     );
   }
 
   if (!value?.exists()) {
     return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <h1 className="mb-4 text-3xl font-bold">Artisan Not Found</h1>
-        <p className="mb-8">
-          The artisan you're looking for doesn't exist or has been removed.
-        </p>
-        <Link
-          to="/artisans"
-          className="inline-block rounded-md bg-primary px-6 py-3 text-white transition-colors hover:bg-opacity-90"
+      <motion.div
+        className="container mx-auto px-4 py-16 text-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.h1
+          className="mb-4 text-3xl font-bold"
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
         >
-          Browse All Artisans
-        </Link>
-      </div>
+          Artisan Not Found
+        </motion.h1>
+        <motion.p
+          className="mb-8"
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.1 }}
+        >
+          The artisan you're looking for doesn't exist or has been removed.
+        </motion.p>
+        <motion.div
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.2 }}
+        >
+          <Link
+            to="/artisans"
+            className="inline-block rounded-md bg-primary px-6 py-3 text-white transition-colors hover:bg-opacity-90"
+          >
+            Browse All Artisans
+          </Link>
+        </motion.div>
+      </motion.div>
     );
   }
 
@@ -78,94 +137,180 @@ const SingleArtisanPage = () => {
   const shareDescription = `Learn about the creative journey of ${name}, one of our talented artisans.`;
 
   return (
-    <div className="container mx-auto px-4 py-20">
-      <div className="mx-auto max-w-4xl">
-        {/* Back link */}
-        <Link
-          to="/artisans"
-          className="mb-8 inline-flex items-center text-primary hover:underline"
+    <AnimatePresence>
+      <motion.div
+        className="container mx-auto px-4 py-20"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          className="mx-auto max-w-4xl"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
         >
-          <ArrowLeft className="mr-2 h-5 w-5" />
-          Back to All Artisans
-        </Link>
-
-        {/* Header */}
-        <div className="mb-12">
-          {image && (
-            <div className="mb-8 rounded-lg shadow-lg">
-              {/* Removed fixed height constraint to allow image to display at its natural aspect ratio */}
-              <img
-                src={image}
-                alt={name}
-                className="w-full rounded-lg bg-gray-50 object-contain"
-              />
-            </div>
-          )}
-
-          <h1 className="mb-4 text-4xl font-bold text-primary">{name}</h1>
-          <div className="mb-8 flex flex-col gap-4 text-gray-600 md:flex-row md:items-center">
-            <span className="flex items-center">
-              <Calendar className="mr-2 h-4 w-4 text-primary" />
-              {formattedDate}
-            </span>
-
-            {phone && (
-              <span className="flex items-center">
-                <Phone className="mr-2 h-4 w-4 text-primary" />
-                {phone}
-              </span>
-            )}
-
-            {address && (
-              <span className="flex items-center">
-                <MapPin className="mr-2 h-4 w-4 text-primary" />
-                {address}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Story Content */}
-        <div className="prose prose-lg mb-12 max-w-none">
-          {story ? (
-            <div dangerouslySetInnerHTML={{ __html: story }} />
-          ) : (
-            <p className="italic text-gray-500">
-              No story available for this artisan yet.
-            </p>
-          )}
-        </div>
-
-        {/* Share section */}
-        <div className="mb-16 border-t border-gray-200 pt-8">
-          <h3 className="mb-4 text-xl font-semibold">Share this story</h3>
-          <div className="flex space-x-4">
-            <WhatsappShareButton url={pageUrl} title={shareTitle}>
-              <WhatsappIcon size={40} round />
-            </WhatsappShareButton>
-
-            <LinkedinShareButton
-              url={pageUrl}
-              title={shareTitle}
-              summary={shareDescription}
+          {/* Back link */}
+          <motion.div variants={fadeIn}>
+            <Link
+              to="/artisans"
+              className="mb-8 inline-flex items-center text-primary hover:underline"
             >
-              <LinkedinIcon size={40} round />
-            </LinkedinShareButton>
+              <ArrowLeft className="mr-2 h-5 w-5" />
+              Back to All Artisans
+            </Link>
+          </motion.div>
 
-            <FacebookShareButton url={pageUrl} quote={shareTitle}>
-              <FacebookIcon size={40} round />
-            </FacebookShareButton>
+          {/* Header */}
+          <motion.div
+            className="mb-12"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
+            {image && (
+              <motion.div
+                className="mb-8 overflow-hidden rounded-lg shadow-lg"
+                variants={fadeIn}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <img
+                  src={image}
+                  alt={name}
+                  className="w-full rounded-lg bg-gray-50 object-contain"
+                />
+              </motion.div>
+            )}
 
-            <TwitterShareButton url={pageUrl} title={shareTitle}>
-              <TwitterIcon size={40} round />
-            </TwitterShareButton>
-          </div>
-        </div>
-      </div>
+            <motion.h1
+              className="mb-4 text-4xl font-bold text-primary"
+              variants={fadeIn}
+            >
+              {name}
+            </motion.h1>
 
-      {/* Related artisans section */}
-      <RelatedArtisans currentArtisanId={id} />
-    </div>
+            <motion.div
+              className="mb-8 flex flex-col gap-4 text-gray-600 md:flex-row md:items-center"
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+            >
+              <motion.span className="flex items-center" variants={fadeIn}>
+                <Calendar className="mr-2 h-4 w-4 text-primary" />
+                {formattedDate}
+              </motion.span>
+
+              {phone && (
+                <motion.span className="flex items-center" variants={fadeIn}>
+                  <Phone className="mr-2 h-4 w-4 text-primary" />
+                  {phone}
+                </motion.span>
+              )}
+
+              {address && (
+                <motion.span className="flex items-center" variants={fadeIn}>
+                  <MapPin className="mr-2 h-4 w-4 text-primary" />
+                  {address}
+                </motion.span>
+              )}
+            </motion.div>
+          </motion.div>
+
+          {/* Story Content */}
+          <motion.div
+            className="prose prose-lg mb-12 max-w-none"
+            variants={fadeIn}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
+            {story ? (
+              <div dangerouslySetInnerHTML={{ __html: story }} />
+            ) : (
+              <p className="italic text-gray-500">
+                No story available for this artisan yet.
+              </p>
+            )}
+          </motion.div>
+
+          {/* Share section */}
+          <motion.div
+            className="mb-16 border-t border-gray-200 pt-8"
+            variants={fadeIn}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.6 }}
+          >
+            <motion.h3
+              className="mb-4 text-xl font-semibold"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              Share this story
+            </motion.h3>
+
+            <motion.div
+              className="flex space-x-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <WhatsappShareButton url={pageUrl} title={shareTitle}>
+                  <WhatsappIcon size={40} round />
+                </WhatsappShareButton>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <LinkedinShareButton
+                  url={pageUrl}
+                  title={shareTitle}
+                  summary={shareDescription}
+                >
+                  <LinkedinIcon size={40} round />
+                </LinkedinShareButton>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FacebookShareButton url={pageUrl} quote={shareTitle}>
+                  <FacebookIcon size={40} round />
+                </FacebookShareButton>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <TwitterShareButton url={pageUrl} title={shareTitle}>
+                  <TwitterIcon size={40} round />
+                </TwitterShareButton>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+
+        {/* Related artisans section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9, duration: 0.5 }}
+        >
+          <RelatedArtisans currentArtisanId={id} />
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

@@ -12,6 +12,7 @@ import { db } from "../../firebase/config";
 import ArtisanCard from "../../components/ArtisansCard";
 import Pagination from "../../components/Pagination";
 import { Loader } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const ArtisansPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,6 +42,11 @@ const ArtisansPage = () => {
 
     getTotalCount();
   }, [artisansPerPage]);
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
 
   // Handle page changes
   const handlePageChange = async (page) => {
@@ -103,19 +109,60 @@ const ArtisansPage = () => {
     setCurrentPage(page);
   };
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+  };
+
+  const pageTransition = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.3 },
+  };
+
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <motion.div
+        className="flex min-h-screen items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <Loader className="h-12 w-12 animate-spin text-primary" />
-      </div>
+      </motion.div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <motion.div
+        className="flex min-h-screen items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="text-red-500">Error: {error.message}</div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -123,34 +170,78 @@ const ArtisansPage = () => {
   const displayData = pageSnapshots[currentPage] || value;
 
   return (
-    <div className="container mx-auto px-4 py-20">
-      <h1 className="mb-8 text-center text-4xl font-bold">Our Artisans</h1>
-      <p className="mx-auto mb-12 max-w-2xl text-center text-lg text-gray-600">
+    <motion.div
+      className="container mx-auto px-4 py-20"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <motion.h1
+        className="mb-8 text-center text-4xl font-bold"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+      >
+        Our Artisans
+      </motion.h1>
+
+      <motion.p
+        className="mx-auto mb-12 max-w-2xl text-center text-lg text-gray-600"
+        initial={{ y: -15, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
         Discover the talented artisans behind our unique products. Each artisan
         brings their own story, skill, and passion to create wonderful handmade
         items.
-      </p>
+      </motion.p>
 
-      {displayData && displayData.docs.length > 0 ? (
-        <>
-          <div className="mb-12 grid grid-cols-1 gap-8">
-            {displayData.docs.map((doc) => (
-              <ArtisanCard key={doc.id} id={doc.id} artisan={doc.data()} />
-            ))}
-          </div>
+      <AnimatePresence mode="wait">
+        <motion.div key={currentPage} {...pageTransition}>
+          {displayData && displayData.docs.length > 0 ? (
+            <>
+              <motion.div
+                className="mb-12 grid grid-cols-1 gap-8"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {displayData.docs.map((doc, index) => (
+                  <motion.div
+                    key={doc.id}
+                    variants={itemVariants}
+                    custom={index}
+                  >
+                    <ArtisanCard id={doc.id} artisan={doc.data()} />
+                  </motion.div>
+                ))}
+              </motion.div>
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </>
-      ) : (
-        <div className="py-16 text-center">
-          <p className="text-xl text-gray-500">No artisans found.</p>
-        </div>
-      )}
-    </div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+              >
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </motion.div>
+            </>
+          ) : (
+            <motion.div
+              className="py-16 text-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <p className="text-xl text-gray-500">No artisans found.</p>
+            </motion.div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
