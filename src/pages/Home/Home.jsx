@@ -19,7 +19,7 @@ const ProductGrid = lazy(() => import("../../components/ProductGrid"));
 
 const Home = () => {
   return (
-    <>
+    <div className="mt-20">
       <Suspense fallback={<Loading />}>
         <div className="hidden md:block">
           <Carousel isMobile={false} />
@@ -38,7 +38,7 @@ const Home = () => {
           <NewsLetterSubscribe />
         </div>
       </Suspense>
-    </>
+    </div>
   );
 };
 

@@ -85,7 +85,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="container mx-auto mt-10 px-4 py-8">
+    <div className="container mx-auto mt-20 px-4 py-8">
       <h1 className="mb-6 text-2xl font-bold">Your Shopping Cart</h1>
 
       <div className="grid gap-6">

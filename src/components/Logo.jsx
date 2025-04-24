@@ -8,7 +8,11 @@ const Logo = ({ className }) => {
       <h1
         className={`relative flex pr-3 font-extrabold tracking-widest  text-black md:text-3xl ${className} `}
       >
-        <img src={shehjarlogo} alt="Shehjar" width={120} height={120} />
+        <img
+          src={shehjarlogo}
+          alt="Shehjar"
+          className="w-[80px] md:w-[120px]"
+        />
       </h1>
     </Link>
   );

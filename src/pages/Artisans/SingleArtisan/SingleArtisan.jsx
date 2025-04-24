@@ -85,7 +85,7 @@ const SingleArtisanPage = () => {
   if (!value?.exists()) {
     return (
       <motion.div
-        className="container mx-auto px-4 py-16 text-center"
+        className="container mx-auto px-4 py-24 text-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -139,7 +139,7 @@ const SingleArtisanPage = () => {
   return (
     <AnimatePresence>
       <motion.div
-        className="container mx-auto px-4 py-20"
+        className="container mx-auto px-4 py-24"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}

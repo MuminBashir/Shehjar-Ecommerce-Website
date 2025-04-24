@@ -177,14 +177,14 @@ const Profile = () => {
 
   if (!currentUser) {
     return (
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-20">
         <div className="text-center">Loading user profile...</div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto mt-10 max-w-screen-xl px-4 py-8">
+    <div className="container mx-auto mt-20 max-w-screen-xl px-4 py-8">
       <h1 className="mb-8 text-3xl font-bold">My Account</h1>
 
       <div className="flex flex-col gap-8 md:flex-row">

@@ -42,7 +42,9 @@ const Carousel = ({ isMobile = false }) => {
 
   if (loading)
     return (
-      <div className="h-[50vh] w-full bg-gray-100">Loading banners...</div>
+      <div className="flex h-[50vh] w-full items-center justify-center bg-gray-100">
+        Loading banners...
+      </div>
     );
   if (error)
     return (

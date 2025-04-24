@@ -70,6 +70,7 @@ const AllProducts = () => {
   useEffect(() => {
     if (searchParam) {
       setSearchTerm(searchParam.toLowerCase().trim());
+      clearFilters();
     } else {
       setSearchTerm(null);
     }

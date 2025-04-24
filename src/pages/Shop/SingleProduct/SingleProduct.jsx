@@ -92,15 +92,28 @@ const SingleProduct = () => {
   };
 
   if (loading)
-    return <div className="p-8 text-center">Loading product details...</div>;
+    return <div className="py-24 text-center">Loading product details...</div>;
   if (error)
     return (
-      <div className="p-8 text-center text-red-500">
+      <div className="py-24 text-center text-red-500">
         Error loading product: {error.message}
       </div>
     );
   if (!product || !product.exists())
-    return <div className="p-8 text-center">Product not found</div>;
+    return (
+      <div className="py-24 text-center">
+        <div className="text-2xl font-bold">Product not found.</div>
+        <div className="mt-3 mb-5">
+          The product you're looking for doesn't exist or has been removed
+        </div>
+        <Link
+          to={"/shop"}
+          className="inline-block rounded-md bg-primary px-6 py-3 text-white transition-colors hover:bg-opacity-90"
+        >
+          Browse All Products
+        </Link>
+      </div>
+    );
 
   const productData = product.data();
   const averageRating = calculateAverageRating(productData.ratings);
@@ -115,7 +128,7 @@ const SingleProduct = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 pt-20">
+    <div className="container mx-auto px-4 pt-24">
       <div className="flex flex-col gap-8 md:flex-row">
         {/* Product Images */}
         <div className="md:w-1/2">
