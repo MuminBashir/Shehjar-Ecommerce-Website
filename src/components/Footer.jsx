@@ -1,7 +1,4 @@
 import React from "react";
-import Blog_01 from "../assets/Blog1.webp";
-import Blog_02 from "../assets/Blog2.webp";
-import Blog_03 from "../assets/Blog3.webp";
 import { BsTelephone, BsBuilding } from "react-icons/bs";
 import {
   AiOutlineFacebook,
@@ -10,29 +7,18 @@ import {
   AiOutlineInstagram,
 } from "react-icons/ai";
 import { FiMail } from "react-icons/fi";
-
-const blog_data = [
-  {
-    id: 1,
-    title: "Furniture Decoration idea",
-    date: "October 20, 2022",
-    image: Blog_01,
-  },
-  {
-    id: 2,
-    title: "Decorate your idea in house",
-    date: "November 03, 2022",
-    image: Blog_02,
-  },
-  {
-    id: 3,
-    title: "Dining Table decorate",
-    date: "December 15, 2022",
-    image: Blog_03,
-  },
-];
+import { useCollection } from "react-firebase-hooks/firestore";
+import { collection, query, orderBy, limit } from "firebase/firestore";
+import { db } from "../firebase/config";
+import { Link } from "react-router-dom";
+import { format } from "date-fns";
 
 const Footer = () => {
+  // Fetch top 3 artisans from Firestore, ordered by created_at (newest first)
+  const [artisansSnapshot, loading, error] = useCollection(
+    query(collection(db, "artisans"), orderBy("created_at", "desc"), limit(3))
+  );
+
   return (
     <>
       <footer className="container mx-auto mt-28 grid grid-cols-1 space-y-10 bg-primary px-5 py-8 tracking-wider text-white md:mt-28 md:grid-cols-4 md:space-y-0 xl:px-28 xl:py-20 ">
@@ -97,54 +83,67 @@ const Footer = () => {
             <div className="w-1/6 border-t"></div>
           </div>
           <div className="flex flex-col space-y-4 text-sm font-light">
-            <a href="#" className="hover:text-white/80">
+            <a href="/about" className="hover:text-white/80">
               About Shehjar
             </a>
-            <a href="#" className="hover:text-white/80">
+            <a href="/contact" className="hover:text-white/80">
               Contact us
             </a>
-            <a href="#" className="hover:text-white/80">
-              FAQ
+            <a href="/terms-and-conditions" className="hover:text-white/80">
+              Terms and Conditions
             </a>
-            <a href="#" className="hover:text-white/80">
+            <a href="/privacy-policy" className="hover:text-white/80">
               Privacy Policy
             </a>
-            <a href="#" className="hover:text-white/80">
-              Return Policy
+            <a href="/shipping-policy" className="hover:text-white/80">
+              Shipping and Return Policy
             </a>
           </div>
         </section>
 
-        {/* Latest section */}
+        {/* Artisan Stories section */}
         <section className="space-y-6">
           <div className="space-y-1">
-            <h2 className="uppercase ">Latest Blogs</h2>
+            <h2 className="uppercase ">Artisan Stories</h2>
             <div className="w-1/6 border-t"></div>
           </div>
-          <div className="flex flex-col space-y-3 font-light ">
-            {blog_data.map((item) => {
-              const { id, title, image, date } = item;
-              return (
-                <article
-                  key={id}
-                  className="flex items-center  justify-start space-x-4 md:flex-col md:items-start md:space-x-0 lg:flex-row xl:space-x-4 "
-                >
-                  <img
-                    width={300}
-                    height={200}
-                    src={image}
-                    alt={title}
-                    className="h-12 w-20 object-cover object-center"
-                  />
-                  <div className=" capitalize ">
-                    <a href="#" className="text-sm hover:text-white/80 ">
-                      {title}
-                    </a>
-                    <p className="text-xs text-gray-200"> {date} </p>
-                  </div>
-                </article>
-              );
-            })}
+          <div className="flex flex-col space-y-3 font-light">
+            {loading ? (
+              <p className="text-sm">Loading artisan stories...</p>
+            ) : error ? (
+              <p className="text-sm">Error loading stories</p>
+            ) : (
+              artisansSnapshot?.docs.map((doc) => {
+                const artisan = doc.data();
+                return (
+                  <article
+                    key={doc.id}
+                    className="flex items-center justify-start space-x-4 md:flex-col md:items-start md:space-x-0 lg:flex-row lg:items-center xl:space-x-4"
+                  >
+                    <div className="h-12 w-16 flex-shrink-0 overflow-hidden">
+                      <img
+                        src={artisan.image}
+                        alt={artisan.name}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                    <div className="capitalize">
+                      <Link
+                        to={`/artisan/${doc.id}`}
+                        className="text-sm hover:text-white/80"
+                      >
+                        {artisan.name}
+                      </Link>
+                      <p className="text-xs text-gray-200">
+                        {artisan.created_at
+                          ? format(artisan.created_at.toDate(), "d MMM, yyyy")
+                          : ""}
+                      </p>
+                    </div>
+                  </article>
+                );
+              })
+            )}
           </div>
         </section>
       </footer>

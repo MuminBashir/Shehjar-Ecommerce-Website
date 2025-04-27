@@ -16,7 +16,6 @@ const BasketProduct = lazy(() => import("../../components/Basket"));
 const Header = lazy(() => import("../../components/Header"));
 const Instagram = lazy(() => import("../../components/Instagram"));
 const ProductCategory = lazy(() => import("../../components/ProductCategory"));
-const ProductGrid = lazy(() => import("../../components/ProductGrid"));
 
 const Home = () => {
   return (

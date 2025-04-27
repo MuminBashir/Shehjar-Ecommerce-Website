@@ -1,9 +1,25 @@
 // src/context/cart/cart_context.js
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { doc, updateDoc, getDoc } from "firebase/firestore";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  doc,
+  updateDoc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../auth/auth_context";
 import { toast } from "react-toastify";
+import { useDocument } from "react-firebase-hooks/firestore";
 
 // Create context
 const CartContext = createContext();
@@ -14,151 +30,288 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
 
-  // Load cart data when the component mounts or when auth state changes
+  // Use react-firebase-hooks to get real-time updates for user data
+  const [userDoc, userLoading, userError] = useDocument(
+    currentUser ? doc(db, "users", currentUser.uid) : null,
+    { snapshotListenOptions: { includeMetadataChanges: true } }
+  );
+
+  // Validate products exist using batch query instead of loading all products
+  const validateProductsExist = useCallback(async (productIds) => {
+    if (!productIds || productIds.length === 0) return [];
+
+    try {
+      // Split into chunks of 10 (Firestore limit for 'in' queries)
+      const chunkSize = 10;
+      const validProductIds = [];
+
+      for (let i = 0; i < productIds.length; i += chunkSize) {
+        const chunk = productIds.slice(i, i + chunkSize);
+        const q = query(
+          collection(db, "products"),
+          where("__name__", "in", chunk)
+        );
+        const querySnapshot = await getDocs(q);
+
+        querySnapshot.forEach((doc) => {
+          validProductIds.push(doc.id);
+        });
+      }
+
+      return validProductIds;
+    } catch (error) {
+      console.error("Error validating products:", error);
+      return [];
+    }
+  }, []);
+
+  // Clean up cart items for deleted products
+  const cleanupDeletedProductsFromCart = useCallback(
+    async (currentCart) => {
+      if (!currentCart || currentCart.length === 0) return [];
+
+      try {
+        // Extract unique product IDs from cart
+        const productIds = [
+          ...new Set(currentCart.map((item) => item.product_id)),
+        ];
+
+        // Validate which products still exist
+        const validProductIds = await validateProductsExist(productIds);
+
+        // Filter cart items
+        const validCartItems = currentCart.filter((item) =>
+          validProductIds.includes(item.product_id)
+        );
+
+        // If some items were filtered out, update the cart
+        if (validCartItems.length < currentCart.length) {
+          if (currentUser) {
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, { cart: validCartItems });
+            toast.info(
+              "Some items were removed from your cart because they are no longer available."
+            );
+          } else {
+            localStorage.setItem("cart", JSON.stringify(validCartItems));
+          }
+        }
+
+        return validCartItems;
+      } catch (error) {
+        console.error("Error cleaning up deleted products from cart:", error);
+        return currentCart; // Return original cart if cleanup fails
+      }
+    },
+    [currentUser, validateProductsExist]
+  );
+
+  // Load cart data when user data changes
   useEffect(() => {
-    const fetchCart = async () => {
+    const processCart = async () => {
       setLoading(true);
       try {
-        if (currentUser) {
-          // Fetch from Firestore if user is logged in
-          const userRef = doc(db, "users", currentUser.uid);
-          const userSnap = await getDoc(userRef);
+        if (currentUser && userDoc) {
+          // User is logged in and we have their data
+          const userData = userDoc.data();
+          if (userData) {
+            const fetchedCart = userData.cart || [];
 
-          if (userSnap.exists()) {
-            const userData = userSnap.data();
-            setCartItems(userData.cart || []);
+            // Clean up deleted products from the cart - run this periodically, not on every load
+            // Only run full validation if last validation was more than 1 hour ago
+            const lastValidation = localStorage.getItem("lastCartValidation");
+            const shouldValidate =
+              !lastValidation ||
+              Date.now() - parseInt(lastValidation) > 3600000; // 1 hour
+
+            if (shouldValidate) {
+              const cleanedCart = await cleanupDeletedProductsFromCart(
+                fetchedCart
+              );
+              setCartItems(cleanedCart);
+              localStorage.setItem("lastCartValidation", Date.now().toString());
+            } else {
+              setCartItems(fetchedCart);
+            }
           } else {
             setCartItems([]);
           }
-        } else {
-          // Fetch from localStorage if user is not logged in
+        } else if (!currentUser) {
+          // User is not logged in, use localStorage
           const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
-          setCartItems(localCart);
+
+          // Only validate periodically for local cart as well
+          const lastValidation = localStorage.getItem("lastCartValidation");
+          const shouldValidate =
+            !lastValidation || Date.now() - parseInt(lastValidation) > 3600000; // 1 hour
+
+          if (shouldValidate) {
+            const cleanedLocalCart = await cleanupDeletedProductsFromCart(
+              localCart
+            );
+            setCartItems(cleanedLocalCart);
+            localStorage.setItem("lastCartValidation", Date.now().toString());
+          } else {
+            setCartItems(localCart);
+          }
         }
       } catch (error) {
-        console.error("Error fetching cart data:", error);
+        console.error("Error processing cart data:", error);
         toast.error("Failed to load your cart");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCart();
-  }, [currentUser]);
+    if (!userLoading) {
+      processCart();
+    }
+  }, [currentUser, userDoc, userLoading, cleanupDeletedProductsFromCart]);
 
-  // This calculates the sum of quantities across all items
-  useEffect(() => {
-    const totalQuantity = cartItems.reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
-    setTotalCartProducts(totalQuantity);
+  // Calculate total products - use useMemo to avoid unnecessary recalculations
+  const totalProducts = useMemo(() => {
+    return cartItems.reduce((sum, item) => sum + item.quantity, 0);
   }, [cartItems]);
 
-  // Add item to cart
-  const addToCart = async (
-    productId,
-    selectedSize,
-    selectedColor,
-    quantity
-  ) => {
+  // Update total products when cartItems change
+  useEffect(() => {
+    setTotalCartProducts(totalProducts);
+  }, [totalProducts]);
+
+  // Check if a single product exists
+  const validateSingleProduct = useCallback(async (productId) => {
     try {
-      setLoading(true);
-      const cartItem = {
-        product_id: productId,
-        size: selectedSize,
-        color: selectedColor,
-        quantity,
-        created_at: new Date().toISOString(),
-      };
+      const productRef = doc(db, "products", productId);
+      const productSnap = await getDoc(productRef);
+      return productSnap.exists();
+    } catch (error) {
+      console.error("Error validating product:", error);
+      return false;
+    }
+  }, []);
 
-      if (currentUser) {
-        // Add to Firebase if user is logged in
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
+  // Add item to cart
+  const addToCart = useCallback(
+    async (productId, selectedSize, selectedColor, quantity) => {
+      try {
+        setLoading(true);
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          const currentCart = userData.cart || [];
+        // Check if the product exists - only validate the specific product
+        const productExists = await validateSingleProduct(productId);
+        if (!productExists) {
+          toast.error("This product is no longer available.");
+          return;
+        }
+
+        const cartItem = {
+          product_id: productId,
+          size: selectedSize,
+          color: selectedColor,
+          quantity,
+          created_at: new Date().toISOString(),
+        };
+
+        if (currentUser) {
+          // Add to Firebase if user is logged in
+          if (userDoc?.exists()) {
+            const userData = userDoc.data();
+            const currentCart = userData.cart || [];
+
+            // Check if item already exists
+            const existingItemIndex = currentCart.findIndex(
+              (item) =>
+                item.product_id === productId &&
+                item.size === selectedSize &&
+                item.color === selectedColor
+            );
+
+            let updatedCart;
+
+            if (existingItemIndex !== -1) {
+              // Update existing item
+              updatedCart = [...currentCart];
+              updatedCart[existingItemIndex] = {
+                ...updatedCart[existingItemIndex],
+                quantity: updatedCart[existingItemIndex].quantity + quantity,
+              };
+            } else {
+              // Add new item
+              updatedCart = [...currentCart, cartItem];
+            }
+
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, { cart: updatedCart });
+            toast.success("Added to cart successfully!");
+          } else {
+            toast.error("Failed to update cart. User data not found.");
+          }
+        } else {
+          // Add to localStorage if user is not logged in
+          const existingCart = [...cartItems];
 
           // Check if item already exists
-          const existingItemIndex = currentCart.findIndex(
+          const existingItemIndex = existingCart.findIndex(
             (item) =>
               item.product_id === productId &&
               item.size === selectedSize &&
               item.color === selectedColor
           );
 
-          let updatedCart;
-
           if (existingItemIndex !== -1) {
             // Update existing item
-            updatedCart = [...currentCart];
-            updatedCart[existingItemIndex] = {
-              ...updatedCart[existingItemIndex],
-              quantity: updatedCart[existingItemIndex].quantity + quantity,
+            existingCart[existingItemIndex] = {
+              ...existingCart[existingItemIndex],
+              quantity: existingCart[existingItemIndex].quantity + quantity,
             };
           } else {
             // Add new item
-            updatedCart = [...currentCart, cartItem];
+            existingCart.push(cartItem);
           }
 
-          await updateDoc(userRef, { cart: updatedCart });
-          setCartItems(updatedCart);
+          localStorage.setItem("cart", JSON.stringify(existingCart));
+          setCartItems(existingCart);
           toast.success("Added to cart successfully!");
-        } else {
-          toast.error("Failed to update cart. User data not found.");
         }
-      } else {
-        // Add to localStorage if user is not logged in
-        const existingCart = [...cartItems];
-
-        // Check if item already exists
-        const existingItemIndex = existingCart.findIndex(
-          (item) =>
-            item.product_id === productId &&
-            item.size === selectedSize &&
-            item.color === selectedColor
-        );
-
-        if (existingItemIndex !== -1) {
-          // Update existing item
-          existingCart[existingItemIndex] = {
-            ...existingCart[existingItemIndex],
-            quantity: existingCart[existingItemIndex].quantity + quantity,
-          };
-        } else {
-          // Add new item
-          existingCart.push(cartItem);
-        }
-
-        localStorage.setItem("cart", JSON.stringify(existingCart));
-        setCartItems(existingCart);
-        toast.success("Added to cart successfully!");
+      } catch (error) {
+        console.error("Error adding to cart:", error);
+        toast.error(`Failed to add item to cart: ${error.message}`);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error adding to cart:", error);
-      toast.error(`Failed to add item to cart: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [cartItems, currentUser, userDoc, validateSingleProduct]
+  );
 
   // Remove item from cart
-  const removeFromCart = async (productId, selectedSize, selectedColor) => {
-    try {
-      setLoading(true);
+  const removeFromCart = useCallback(
+    async (productId, selectedSize, selectedColor) => {
+      try {
+        setLoading(true);
 
-      if (currentUser) {
-        // Remove from Firebase if user is logged in
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
+        if (currentUser) {
+          // Remove from Firebase if user is logged in
+          if (userDoc?.exists()) {
+            const userData = userDoc.data();
+            const currentCart = userData.cart || [];
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          const currentCart = userData.cart || [];
+            const updatedCart = currentCart.filter(
+              (item) =>
+                !(
+                  item.product_id === productId &&
+                  item.size === selectedSize &&
+                  item.color === selectedColor
+                )
+            );
 
-          const updatedCart = currentCart.filter(
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, { cart: updatedCart });
+            toast.success("Item removed from cart");
+          }
+        } else {
+          // Remove from localStorage if user is not logged in
+          const existingCart = [...cartItems];
+
+          const updatedCart = existingCart.filter(
             (item) =>
               !(
                 item.product_id === productId &&
@@ -167,55 +320,55 @@ export const CartProvider = ({ children }) => {
               )
           );
 
-          await updateDoc(userRef, { cart: updatedCart });
+          localStorage.setItem("cart", JSON.stringify(updatedCart));
           setCartItems(updatedCart);
           toast.success("Item removed from cart");
         }
-      } else {
-        // Remove from localStorage if user is not logged in
-        const existingCart = [...cartItems];
-
-        const updatedCart = existingCart.filter(
-          (item) =>
-            !(
-              item.product_id === productId &&
-              item.size === selectedSize &&
-              item.color === selectedColor
-            )
-        );
-
-        localStorage.setItem("cart", JSON.stringify(updatedCart));
-        setCartItems(updatedCart);
-        toast.success("Item removed from cart");
+      } catch (error) {
+        console.error("Error removing from cart:", error);
+        toast.error(`Failed to remove item from cart: ${error.message}`);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error removing from cart:", error);
-      toast.error(`Failed to remove item from cart: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [cartItems, currentUser, userDoc]
+  );
 
   // Update item quantity in cart
-  const updateCartItemQuantity = async (
-    productId,
-    selectedSize,
-    selectedColor,
-    newQuantity
-  ) => {
-    try {
-      setLoading(true);
+  const updateCartItemQuantity = useCallback(
+    async (productId, selectedSize, selectedColor, newQuantity) => {
+      try {
+        setLoading(true);
 
-      if (currentUser) {
-        // Update in Firebase if user is logged in
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
+        // Only check product existence when necessary (not on every quantity update)
+        // Could add periodic validation or validate on checkout instead
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          const currentCart = userData.cart || [];
+        if (currentUser) {
+          // Update in Firebase if user is logged in
+          if (userDoc?.exists()) {
+            const userData = userDoc.data();
+            const currentCart = userData.cart || [];
 
-          const updatedCart = currentCart.map((item) => {
+            const updatedCart = currentCart.map((item) => {
+              if (
+                item.product_id === productId &&
+                item.size === selectedSize &&
+                item.color === selectedColor
+              ) {
+                return { ...item, quantity: newQuantity };
+              }
+              return item;
+            });
+
+            const userRef = doc(db, "users", currentUser.uid);
+            await updateDoc(userRef, { cart: updatedCart });
+            toast.success("Cart updated");
+          }
+        } else {
+          // Update in localStorage if user is not logged in
+          const existingCart = [...cartItems];
+
+          const updatedCart = existingCart.map((item) => {
             if (
               item.product_id === productId &&
               item.size === selectedSize &&
@@ -226,39 +379,22 @@ export const CartProvider = ({ children }) => {
             return item;
           });
 
-          await updateDoc(userRef, { cart: updatedCart });
+          localStorage.setItem("cart", JSON.stringify(updatedCart));
           setCartItems(updatedCart);
           toast.success("Cart updated");
         }
-      } else {
-        // Update in localStorage if user is not logged in
-        const existingCart = [...cartItems];
-
-        const updatedCart = existingCart.map((item) => {
-          if (
-            item.product_id === productId &&
-            item.size === selectedSize &&
-            item.color === selectedColor
-          ) {
-            return { ...item, quantity: newQuantity };
-          }
-          return item;
-        });
-
-        localStorage.setItem("cart", JSON.stringify(updatedCart));
-        setCartItems(updatedCart);
-        toast.success("Cart updated");
+      } catch (error) {
+        console.error("Error updating cart:", error);
+        toast.error(`Failed to update cart: ${error.message}`);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error updating cart:", error);
-      toast.error(`Failed to update cart: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [cartItems, currentUser, userDoc]
+  );
 
   // Clear the entire cart
-  const clearCart = async () => {
+  const clearCart = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -266,11 +402,11 @@ export const CartProvider = ({ children }) => {
         // Clear Firebase cart if user is logged in
         const userRef = doc(db, "users", currentUser.uid);
         await updateDoc(userRef, { cart: [] });
+      } else {
+        // Clear localStorage cart
+        localStorage.setItem("cart", JSON.stringify([]));
+        setCartItems([]);
       }
-
-      // Clear localStorage cart
-      localStorage.setItem("cart", JSON.stringify([]));
-      setCartItems([]);
       toast.success("Cart cleared");
     } catch (error) {
       console.error("Error clearing cart:", error);
@@ -278,67 +414,33 @@ export const CartProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser]);
 
-  // When user logs in, merge localStorage cart with user's cart in Firestore
-  const mergeCartsAfterLogin = async (userId) => {
-    try {
-      const localCart = JSON.parse(localStorage.getItem("cart") || "[]");
-
-      if (localCart.length === 0) return;
-
-      const userRef = doc(db, "users", userId);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const userCart = userData.cart || [];
-
-        // Create a merged cart with no duplicates
-        const mergedCart = [...userCart];
-
-        localCart.forEach((localItem) => {
-          const existingItemIndex = mergedCart.findIndex(
-            (item) =>
-              item.product_id === localItem.product_id &&
-              item.size === localItem.size &&
-              item.color === localItem.color
-          );
-
-          if (existingItemIndex !== -1) {
-            // Update quantity if item exists
-            mergedCart[existingItemIndex].quantity += localItem.quantity;
-          } else {
-            // Add new item if not exists
-            mergedCart.push(localItem);
-          }
-        });
-
-        // Update Firebase and clear localStorage
-        await updateDoc(userRef, { cart: mergedCart });
-        localStorage.setItem("cart", JSON.stringify([]));
-        setCartItems(mergedCart);
-      }
-    } catch (error) {
-      console.error("Error merging carts:", error);
-    }
-  };
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(
+    () => ({
+      cartItems,
+      totalCartProducts,
+      loading: loading || userLoading,
+      addToCart,
+      removeFromCart,
+      updateCartItemQuantity,
+      clearCart,
+    }),
+    [
+      cartItems,
+      totalCartProducts,
+      loading,
+      userLoading,
+      addToCart,
+      removeFromCart,
+      updateCartItemQuantity,
+      clearCart,
+    ]
+  );
 
   return (
-    <CartContext.Provider
-      value={{
-        cartItems,
-        totalCartProducts,
-        loading,
-        addToCart,
-        removeFromCart,
-        updateCartItemQuantity,
-        clearCart,
-        mergeCartsAfterLogin,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
+    <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>
   );
 };
 

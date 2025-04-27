@@ -17,6 +17,8 @@ export const AuthProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [authLoaded, setAuthLoaded] = useState(false);
+  const [fromCart, setFromCart] = useState(false);
 
   // Use the useDocument hook to get real-time updates
   const [userDoc, userDocLoading, userDocError] = useDocument(
@@ -45,9 +47,6 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      // Clear cart items from localStorage after successful login
-      localStorage.removeItem("cart");
-
       return user;
     } catch (error) {
       console.error("Error signing in with Google:", error);
@@ -63,6 +62,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setAuthUser(user);
+      setAuthLoaded(true); // Mark auth loading as complete
+
       if (!user) {
         setCurrentUser(null);
         setLoading(false);
@@ -76,14 +77,22 @@ export const AuthProvider = ({ children }) => {
 
   // Update currentUser when userDoc changes
   useEffect(() => {
+    // Only proceed if auth is loaded
+    if (!authLoaded) return;
+
+    // If no auth user, we already set loading false in the auth effect
+    if (!authUser) return;
+
+    // If we're still loading the user doc, wait
     if (userDocLoading) return;
 
     if (userDoc && userDoc.exists()) {
       setCurrentUser(userDoc.data());
     }
 
+    // Now we can safely say everything is loaded
     setLoading(false);
-  }, [userDoc, userDocLoading]);
+  }, [userDoc, userDocLoading, authUser, authLoaded]);
 
   // Handle errors from useDocument hook
   useEffect(() => {
@@ -99,11 +108,9 @@ export const AuthProvider = ({ children }) => {
     signInWithGoogle,
     logout,
     loading,
+    fromCart,
+    setFromCart,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {loading ? <div>Loading...</div> : children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

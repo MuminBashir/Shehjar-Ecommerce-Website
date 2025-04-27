@@ -1,4 +1,3 @@
-// src/pages/Login.js
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth/auth_context";
@@ -8,7 +7,7 @@ import shehjarlogo from "../../assets/shehjarlogo.png";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, fromCart, setFromCart, currentUser } = useAuth();
   const navigate = useNavigate();
 
   const handleGoogleSignIn = async (e) => {
@@ -17,7 +16,14 @@ const Login = () => {
       setLoading(true);
       await signInWithGoogle();
       toast.success("Logged in successfully!");
-      navigate("/");
+
+      // Check if the user came from cart and redirect accordingly
+      if (fromCart) {
+        navigate("/cart");
+        setFromCart(false);
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       toast.error("Failed to sign in with Google. Please try again.");
       console.error(err);
@@ -47,6 +53,11 @@ const Login = () => {
               </div>
             </div>
             <h2 className="text-2xl font-bold">Welcome To Shehjar</h2>
+            {fromCart && (
+              <p className="mt-2 text-sm text-gray-600">
+                Please sign in to continue to checkout
+              </p>
+            )}
           </div>
 
           <div className="mt-8">

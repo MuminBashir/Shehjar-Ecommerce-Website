@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useAuth } from "../../context/auth/auth_context";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { FiEdit, FiTrash2, FiPlusCircle } from "react-icons/fi";
 import { toast } from "react-toastify";
+import Select from "react-select";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  parsePhoneNumberFromString,
+  isValidPhoneNumber,
+} from "libphonenumber-js";
+// Import the country-state-city library which has more comprehensive data
+import { Country, State } from "country-state-city";
 
 const Profile = () => {
   const { currentUser } = useAuth();
@@ -12,23 +22,81 @@ const Profile = () => {
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
-
-  // For delete confirmation dialog
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState(null);
+  const [stateOptions, setStateOptions] = useState([]);
 
-  // Form state for new/edit address
-  const [addressForm, setAddressForm] = useState({
-    name: "",
-    fullName: "",
-    phone: "",
-    street: "",
-    city: "",
-    state: "",
-    zipCode: "",
-    country: "",
-    isDefault: false,
+  // Get countries list using country-state-city library
+  const countries = useMemo(() => {
+    return Country.getAllCountries().map((country) => ({
+      value: country.isoCode,
+      label: country.name,
+    }));
+  }, []);
+
+  // Form validation schema
+  const addressSchema = z.object({
+    name: z.string().min(1, "Address name is required"),
+    fullName: z.string().min(1, "Full name is required"),
+    phone: z.string().min(1, "Phone number is required"),
+    street: z.string().min(1, "Street address is required"),
+    city: z.string().min(1, "City is required"),
+    state: z
+      .object({
+        value: z.string(),
+        label: z.string(),
+      })
+      .nullable()
+      .optional(),
+    zipCode: z.string().min(1, "Zip code is required"),
+    country: z
+      .object({
+        value: z.string(),
+        label: z.string(),
+      })
+      .nullable(),
+    isDefault: z.boolean(),
   });
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      name: "",
+      fullName: "",
+      phone: "",
+      street: "",
+      city: "",
+      state: null,
+      zipCode: "",
+      country: null,
+      isDefault: false,
+    },
+  });
+
+  // Watch the country field to update states
+  const watchedCountry = watch("country");
+
+  // Update states/provinces when country changes
+  useEffect(() => {
+    if (watchedCountry && watchedCountry.value) {
+      const states = State.getStatesOfCountry(watchedCountry.value);
+      setStateOptions(
+        states.map((state) => ({
+          value: state.isoCode,
+          label: state.name,
+        }))
+      );
+    } else {
+      setStateOptions([]);
+    }
+  }, [watchedCountry]);
 
   // Load addresses when component mounts
   useEffect(() => {
@@ -39,48 +107,54 @@ const Profile = () => {
     }
   }, [currentUser]);
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setAddressForm({
-      ...addressForm,
-      [name]: type === "checkbox" ? checked : value,
-    });
-  };
-
   const resetAddressForm = () => {
-    setAddressForm({
-      name: "",
-      fullName: "",
-      phone: "",
-      street: "",
-      city: "",
-      state: "",
-      zipCode: "",
-      country: "",
-      isDefault: false,
-    });
+    reset();
     setIsAddingAddress(false);
     setIsEditingAddress(false);
     setEditIndex(null);
   };
 
-  const handleAddAddress = async (e) => {
-    e.preventDefault();
-
+  const formatPhoneNumber = (phoneNumber, countryCode) => {
     try {
-      const newAddress = { ...addressForm, id: Date.now().toString() };
+      const parsedNumber = parsePhoneNumberFromString(phoneNumber, countryCode);
+      return parsedNumber ? parsedNumber.formatInternational() : phoneNumber;
+    } catch (error) {
+      return phoneNumber;
+    }
+  };
+
+  const onAddressSubmit = async (data) => {
+    try {
+      // Format the data for storage
+      const formattedAddress = {
+        ...data,
+        state: data.state?.value || "",
+        stateName: data.state?.label || "",
+        country: data.country?.value || "",
+        countryName: data.country?.label || "",
+        phone: data.country?.value
+          ? formatPhoneNumber(data.phone, data.country.value)
+          : data.phone,
+        id: isEditingAddress ? addresses[editIndex].id : Date.now().toString(),
+      };
+
       let updatedAddresses = [...addresses];
 
-      // If new address is default, make sure all others are not default
-      if (newAddress.isDefault) {
+      // If address is default, make sure all others are not default
+      if (formattedAddress.isDefault) {
         updatedAddresses = updatedAddresses.map((addr) => ({
           ...addr,
           isDefault: false,
         }));
       }
 
-      // Add the new address
-      updatedAddresses.push(newAddress);
+      if (isEditingAddress) {
+        // Update existing address
+        updatedAddresses[editIndex] = formattedAddress;
+      } else {
+        // Add new address
+        updatedAddresses.push(formattedAddress);
+      }
 
       // Update Firestore
       const userRef = doc(db, "users", currentUser.uid);
@@ -91,51 +165,63 @@ const Profile = () => {
       // Update local state
       setAddresses(updatedAddresses);
       resetAddressForm();
-      toast.success("Address added successfully!");
+      toast.success(
+        `Address ${isEditingAddress ? "updated" : "added"} successfully!`
+      );
     } catch (error) {
-      console.error("Error adding address:", error);
-      toast.error("Failed to add address. Please try again.");
+      console.error(
+        `Error ${isEditingAddress ? "updating" : "adding"} address:`,
+        error
+      );
+      toast.error(
+        `Failed to ${
+          isEditingAddress ? "update" : "add"
+        } address. Please try again.`
+      );
     }
   };
 
   const handleEditAddress = (index) => {
+    window.scrollTo({ top: 100, behavior: "smooth" });
+    const address = addresses[index];
     setIsEditingAddress(true);
     setEditIndex(index);
-    setAddressForm(addresses[index]);
-  };
 
-  const handleUpdateAddress = async (e) => {
-    e.preventDefault();
+    // Find country and state objects from their values
+    const countryObj =
+      countries.find((c) => c.value === address.country) ||
+      countries.find((c) => c.label === address.countryName);
 
-    try {
-      let updatedAddresses = [...addresses];
-      const updatedAddress = { ...addressForm };
+    // Set form values
+    reset({
+      name: address.name || "",
+      fullName: address.fullName || "",
+      phone: address.phone || "",
+      street: address.street || "",
+      city: address.city || "",
+      state: null, // Will be set after country selection triggers state options
+      zipCode: address.zipCode || "",
+      country: countryObj,
+      isDefault: address.isDefault || false,
+    });
 
-      // If this address is being set as default
-      if (updatedAddress.isDefault) {
-        // Make all other addresses non-default
-        updatedAddresses = updatedAddresses.map((addr) => ({
-          ...addr,
-          isDefault: false,
+    // If we have country and state info, set state after state options are loaded
+    if (countryObj) {
+      setTimeout(() => {
+        const states = State.getStatesOfCountry(countryObj.value);
+        const statesList = states.map((state) => ({
+          value: state.isoCode,
+          label: state.name,
         }));
-      }
 
-      // Update the address at the edit index
-      updatedAddresses[editIndex] = updatedAddress;
+        const stateObj =
+          statesList.find((s) => s.value === address.state) ||
+          statesList.find((s) => s.label === address.stateName);
 
-      // Update Firestore
-      const userRef = doc(db, "users", currentUser.uid);
-      await updateDoc(userRef, {
-        addresses: updatedAddresses,
-      });
-
-      // Update local state
-      setAddresses(updatedAddresses);
-      resetAddressForm();
-      toast.success("Address updated successfully!");
-    } catch (error) {
-      console.error("Error updating address:", error);
-      toast.error("Failed to update address. Please try again.");
+        if (stateObj) {
+          setValue("state", stateObj);
+        }
+      }, 100);
     }
   };
 
@@ -284,9 +370,7 @@ const Profile = () => {
                 {/* Address Form */}
                 {(isAddingAddress || isEditingAddress) && (
                   <form
-                    onSubmit={
-                      isEditingAddress ? handleUpdateAddress : handleAddAddress
-                    }
+                    onSubmit={handleSubmit(onAddressSubmit)}
                     className="mb-6 rounded-lg border p-4"
                   >
                     <h3 className="mb-4 text-lg font-semibold">
@@ -297,127 +381,208 @@ const Profile = () => {
                         <label className="mb-1 block text-gray-700">
                           Address Name*
                         </label>
-                        <input
-                          type="text"
+                        <Controller
                           name="name"
-                          value={addressForm.name}
-                          onChange={handleInputChange}
-                          placeholder="Home, Office, etc."
-                          className="w-full rounded-md border border-gray-300 py-2 px-3"
-                          required
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              {...field}
+                              type="text"
+                              placeholder="Home, Office, etc."
+                              className="w-full rounded-md border border-gray-300 py-2 px-3"
+                            />
+                          )}
                         />
+                        {errors.name && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.name.message}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="mb-1 block text-gray-700">
                           Full Name*
                         </label>
-                        <input
-                          type="text"
+                        <Controller
                           name="fullName"
-                          value={addressForm.fullName}
-                          onChange={handleInputChange}
-                          placeholder="John Doe"
-                          className="w-full rounded-md border border-gray-300 py-2 px-3"
-                          required
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              {...field}
+                              type="text"
+                              placeholder="John Doe"
+                              className="w-full rounded-md border border-gray-300 py-2 px-3"
+                            />
+                          )}
                         />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-gray-700">
-                          Phone Number*
-                        </label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={addressForm.phone}
-                          onChange={handleInputChange}
-                          placeholder="123-456-7890"
-                          className="w-full rounded-md border border-gray-300 py-2 px-3"
-                          required
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="mb-1 block text-gray-700">
-                          Street Address*
-                        </label>
-                        <input
-                          type="text"
-                          name="street"
-                          value={addressForm.street}
-                          onChange={handleInputChange}
-                          placeholder="123 Main St, Apt 4B"
-                          className="w-full rounded-md border border-gray-300 py-2 px-3"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-gray-700">
-                          City*
-                        </label>
-                        <input
-                          type="text"
-                          name="city"
-                          value={addressForm.city}
-                          onChange={handleInputChange}
-                          placeholder="New York"
-                          className="w-full rounded-md border border-gray-300 py-2 px-3"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-gray-700">
-                          State/Province*
-                        </label>
-                        <input
-                          type="text"
-                          name="state"
-                          value={addressForm.state}
-                          onChange={handleInputChange}
-                          placeholder="NY"
-                          className="w-full rounded-md border border-gray-300 py-2 px-3"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="mb-1 block text-gray-700">
-                          Zip/Postal Code*
-                        </label>
-                        <input
-                          type="text"
-                          name="zipCode"
-                          value={addressForm.zipCode}
-                          onChange={handleInputChange}
-                          placeholder="10001"
-                          className="w-full rounded-md border border-gray-300 py-2 px-3"
-                          required
-                        />
+                        {errors.fullName && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.fullName.message}
+                          </p>
+                        )}
                       </div>
                       <div>
                         <label className="mb-1 block text-gray-700">
                           Country*
                         </label>
-                        <input
-                          type="text"
+                        <Controller
                           name="country"
-                          value={addressForm.country}
-                          onChange={handleInputChange}
-                          placeholder="United States"
-                          className="w-full rounded-md border border-gray-300 py-2 px-3"
-                          required
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              options={countries}
+                              placeholder="Select Country"
+                              className="w-full"
+                              classNamePrefix="react-select"
+                            />
+                          )}
                         />
+                        {errors.country && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.country.message}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-gray-700">
+                          Phone Number*
+                        </label>
+                        <Controller
+                          name="phone"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              {...field}
+                              type="tel"
+                              placeholder="+1 (123) 456-7890"
+                              className="w-full rounded-md border border-gray-300 py-2 px-3"
+                            />
+                          )}
+                        />
+                        {errors.phone && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.phone.message}
+                          </p>
+                        )}
                       </div>
                       <div className="md:col-span-2">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            name="isDefault"
-                            checked={addressForm.isDefault}
-                            onChange={handleInputChange}
-                            className="mr-2"
-                          />
-                          <span className="text-gray-700">
-                            Set as default address
-                          </span>
+                        <label className="mb-1 block text-gray-700">
+                          Street Address*
                         </label>
+                        <Controller
+                          name="street"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              {...field}
+                              type="text"
+                              placeholder="123 Main St, Apt 4B"
+                              className="w-full rounded-md border border-gray-300 py-2 px-3"
+                            />
+                          )}
+                        />
+                        {errors.street && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.street.message}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-gray-700">
+                          City*
+                        </label>
+                        <Controller
+                          name="city"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              {...field}
+                              type="text"
+                              placeholder="New York"
+                              className="w-full rounded-md border border-gray-300 py-2 px-3"
+                            />
+                          )}
+                        />
+                        {errors.city && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.city.message}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-gray-700">
+                          State/Province
+                        </label>
+                        <Controller
+                          name="state"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              options={stateOptions}
+                              isDisabled={
+                                !watchedCountry || stateOptions.length === 0
+                              }
+                              placeholder={
+                                !watchedCountry
+                                  ? "Select country first"
+                                  : stateOptions.length === 0
+                                  ? "No states available for this country"
+                                  : "Select State/Province"
+                              }
+                              className="w-full"
+                              classNamePrefix="react-select"
+                              isClearable
+                            />
+                          )}
+                        />
+                        {errors.state && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.state.message}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-gray-700">
+                          Zip/Postal Code*
+                        </label>
+                        <Controller
+                          name="zipCode"
+                          control={control}
+                          render={({ field }) => (
+                            <input
+                              {...field}
+                              type="text"
+                              placeholder="10001"
+                              className="w-full rounded-md border border-gray-300 py-2 px-3"
+                            />
+                          )}
+                        />
+                        {errors.zipCode && (
+                          <p className="mt-1 text-xs text-red-500">
+                            {errors.zipCode.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="md:col-span-2">
+                        <Controller
+                          name="isDefault"
+                          control={control}
+                          render={({ field }) => (
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={field.onChange}
+                                className="mr-2"
+                              />
+                              <span className="text-gray-700">
+                                Set as default address
+                              </span>
+                            </label>
+                          )}
+                        />
                       </div>
                     </div>
                     <div className="mt-4 flex gap-2">
@@ -475,9 +640,12 @@ const Profile = () => {
                         <p className="text-gray-700">{address.fullName}</p>
                         <p className="text-gray-700">{address.street}</p>
                         <p className="text-gray-700">
-                          {address.city}, {address.state} {address.zipCode}
+                          {address.city}, {address.stateName || address.state}{" "}
+                          {address.zipCode}
                         </p>
-                        <p className="text-gray-700">{address.country}</p>
+                        <p className="text-gray-700">
+                          {address.countryName || address.country}
+                        </p>
                         <p className="mt-1 text-gray-700">
                           Phone: {address.phone}
                         </p>

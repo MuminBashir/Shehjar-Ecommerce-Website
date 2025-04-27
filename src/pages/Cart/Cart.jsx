@@ -9,9 +9,10 @@ import { useCollectionData } from "react-firebase-hooks/firestore";
 import Empty_Cart from "../../components/Empty_cart";
 import CartItem from "../../components/CartItem";
 import { IndianRupee } from "lucide-react";
+import { toast } from "react-toastify";
 
 const Cart = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, setFromCart } = useAuth();
   const { cartItems, loading: cartLoading, removeFromCart } = useCart();
   const { currentSale, hasActiveSale } = useSale(); // Get sale information
   const navigate = useNavigate();
@@ -93,7 +94,9 @@ const Cart = () => {
     if (currentUser) {
       navigate("/checkout");
     } else {
-      navigate("/login", { state: { redirectTo: "/checkout" } });
+      setFromCart(true); // Set fromCart to true before navigating to login
+      navigate("/login");
+      toast.warning("Please sign in to continue to checkout");
     }
   };
 
