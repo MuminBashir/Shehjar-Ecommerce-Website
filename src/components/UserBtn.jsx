@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/auth/auth_context";
 import { BsPersonCircle } from "react-icons/bs";
 import { FiLogOut, FiUser } from "react-icons/fi";
-import { toast } from "react-toastify";
 
 const UserBtn = () => {
   const { currentUser, logout } = useAuth();
@@ -16,10 +15,8 @@ const UserBtn = () => {
       await logout();
       setIsOpen(false);
       navigate("/");
-      toast.success("Logged out successfully.");
     } catch (error) {
       console.error("Failed to log out:", error);
-      toast.error("Logout failed. Please try again.");
     }
   };
 

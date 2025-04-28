@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth/auth_context";
-import { toast } from "react-toastify";
 import googleLogo from "../../assets/googlelogo.webp";
 import shehjarlogo from "../../assets/shehjarlogo.png";
 
@@ -15,7 +14,6 @@ const Login = () => {
     try {
       setLoading(true);
       await signInWithGoogle();
-      toast.success("Logged in successfully!");
 
       // Check if the user came from cart and redirect accordingly
       if (fromCart) {
@@ -25,7 +23,6 @@ const Login = () => {
         navigate("/");
       }
     } catch (err) {
-      toast.error("Failed to sign in with Google. Please try again.");
       console.error(err);
     } finally {
       setLoading(false);

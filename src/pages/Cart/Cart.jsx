@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth/auth_context";
 import { useCart } from "../../context/cart/cart_context";
 import { useSale } from "../../context/sale/sale_context";
+import { useCheckout } from "../../context/checkout/checkout_context";
 import { db } from "../../firebase/config";
-import { collection, query } from "firebase/firestore";
-import { useCollectionData } from "react-firebase-hooks/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import Empty_Cart from "../../components/Empty_cart";
 import CartItem from "../../components/CartItem";
 import { IndianRupee } from "lucide-react";
@@ -14,99 +14,187 @@ import { toast } from "react-toastify";
 const Cart = () => {
   const { currentUser, setFromCart } = useAuth();
   const { cartItems, loading: cartLoading, removeFromCart } = useCart();
-  const { currentSale, hasActiveSale } = useSale(); // Get sale information
+  const { currentSale, hasActiveSale } = useSale();
+  const { addItemsToCheckout } = useCheckout();
   const navigate = useNavigate();
-  const [products, setProducts] = useState({});
+  const [cartProducts, setCartProducts] = useState([]);
   const [originalTotal, setOriginalTotal] = useState(0);
   const [discountedTotal, setDiscountedTotal] = useState(0);
   const [totalSavings, setTotalSavings] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedItems, setSelectedItems] = useState({});
 
-  // Fetch all products once (we'll filter what we need)
-  const productsQuery = query(collection(db, "products"));
-  const [productsData, productsLoading] = useCollectionData(productsQuery);
-
+  // Fetch only the products in the cart
   useEffect(() => {
-    // Create a lookup map of products by ID for quick access
-    if (productsData) {
-      const productsMap = {};
-      productsData.forEach((product) => {
-        productsMap[product.id] = product;
-      });
-      setProducts(productsMap);
-    }
-  }, [productsData]);
+    const fetchCartProducts = async () => {
+      if (cartItems.length === 0) {
+        setCartProducts([]);
+        setLoading(false);
+        return;
+      }
+      window.scrollTo(0, 0);
 
-  useEffect(() => {
-    // Calculate total price once we have all data
-    if (cartItems.length > 0 && Object.keys(products).length > 0) {
-      let original = 0;
-      let discounted = 0;
+      try {
+        // Get unique product IDs from cart items
+        const productIds = [
+          ...new Set(cartItems.map((item) => item.product_id)),
+        ];
 
-      cartItems.forEach((item) => {
-        const product = products[item.product_id];
-        if (product) {
-          // Calculate original price
-          const itemOriginalTotal = product.price * item.quantity;
-          original += itemOriginalTotal;
+        // Fetch each product by ID
+        const productPromises = productIds.map(async (id) => {
+          const productRef = doc(db, "products", id);
+          const productSnap = await getDoc(productRef);
 
-          // Apply discount if applicable
-          const isOnSale =
-            hasActiveSale &&
-            currentSale?.product_ids?.includes(item.product_id);
-
-          if (isOnSale && currentSale?.discount_percentage) {
-            const discountedPrice = Math.floor(
-              product.price * (1 - currentSale.discount_percentage / 100)
-            );
-            const itemDiscountedTotal = discountedPrice * item.quantity;
-            discounted += itemDiscountedTotal;
-          } else {
-            discounted += itemOriginalTotal;
+          if (productSnap.exists()) {
+            return { id: productSnap.id, ...productSnap.data() };
           }
+          return null;
+        });
+
+        const products = await Promise.all(productPromises);
+        const validProducts = products.filter((p) => p !== null);
+
+        // Create a map for quick access
+        const productsMap = {};
+        validProducts.forEach((product) => {
+          productsMap[product.id] = product;
+        });
+
+        // Map cart items to include product details
+        const updatedCartProducts = cartItems
+          .map((item) => {
+            const product = productsMap[item.product_id];
+            return product ? { ...item, product } : null;
+          })
+          .filter((item) => item !== null);
+
+        setCartProducts(updatedCartProducts);
+
+        // Initialize selection state for all items (all selected by default)
+        const initialSelection = {};
+        updatedCartProducts.forEach((item) => {
+          const key = `${item.product_id}-${item.size}-${item.color}`;
+          initialSelection[key] = true;
+        });
+        setSelectedItems(initialSelection);
+
+        calculateTotals(updatedCartProducts, initialSelection);
+      } catch (error) {
+        console.error("Error fetching cart products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCartProducts();
+  }, [cartItems, cartLoading, hasActiveSale, currentSale]);
+
+  // Calculate totals based on selected items
+  const calculateTotals = (products, selectedState) => {
+    let original = 0;
+    let discounted = 0;
+
+    products.forEach((item) => {
+      const key = `${item.product_id}-${item.size}-${item.color}`;
+      if (selectedState[key]) {
+        const product = item.product;
+
+        // Calculate original price
+        const itemOriginalTotal = product.price * item.quantity;
+        original += itemOriginalTotal;
+
+        // Apply discount if applicable
+        const isOnSale =
+          hasActiveSale && currentSale?.product_ids?.includes(item.product_id);
+
+        if (isOnSale && currentSale?.discount_percentage) {
+          const discountedPrice = Math.floor(
+            product.price * (1 - currentSale.discount_percentage / 100)
+          );
+          const itemDiscountedTotal = discountedPrice * item.quantity;
+          discounted += itemDiscountedTotal;
+        } else {
+          discounted += itemOriginalTotal;
         }
-      });
+      }
+    });
 
-      setOriginalTotal(original);
-      setDiscountedTotal(discounted);
-      setTotalSavings(original - discounted);
-    } else {
-      setOriginalTotal(0);
-      setDiscountedTotal(0);
-      setTotalSavings(0);
-    }
-
-    setLoading(cartLoading || productsLoading);
-  }, [
-    cartItems,
-    products,
-    cartLoading,
-    productsLoading,
-    hasActiveSale,
-    currentSale,
-  ]);
+    setOriginalTotal(original);
+    setDiscountedTotal(discounted);
+    setTotalSavings(original - discounted);
+  };
 
   const handleRemoveItem = (productId, size, color) => {
     removeFromCart(productId, size, color);
   };
 
+  const handleToggleSelection = (productId, size, color) => {
+    const key = `${productId}-${size}-${color}`;
+    const newSelectedItems = {
+      ...selectedItems,
+      [key]: !selectedItems[key],
+    };
+
+    setSelectedItems(newSelectedItems);
+    calculateTotals(cartProducts, newSelectedItems);
+  };
+
+  const handleSelectAll = () => {
+    const allSelected = Object.values(selectedItems).every(Boolean);
+    const newSelectedItems = {};
+
+    cartProducts.forEach((item) => {
+      const key = `${item.product_id}-${item.size}-${item.color}`;
+      newSelectedItems[key] = !allSelected;
+    });
+
+    setSelectedItems(newSelectedItems);
+    calculateTotals(cartProducts, newSelectedItems);
+  };
+
   const handleCheckout = () => {
+    // Check if any items are selected
+    const hasSelectedItems = Object.values(selectedItems).some(Boolean);
+
+    if (!hasSelectedItems) {
+      toast.warning("Please select at least one item to proceed to checkout");
+      return;
+    }
+
     if (currentUser) {
+      // Prepare items for checkout (only selected ones)
+      const checkoutItems = cartProducts
+        .filter(
+          (item) =>
+            selectedItems[`${item.product_id}-${item.size}-${item.color}`]
+        )
+        .map((item) => {
+          const { product, product_id, quantity, size, color } = item;
+
+          return {
+            product_id,
+            title: product.name,
+            image: product.thumbnail_image,
+            color,
+            size,
+            quantity,
+            price: product.price,
+          };
+        });
+
+      // Add items to checkout context
+      addItemsToCheckout(checkoutItems);
+
+      // Navigate to checkout page
       navigate("/checkout");
     } else {
-      setFromCart(true); // Set fromCart to true before navigating to login
+      setFromCart(true);
       navigate("/login");
       toast.warning("Please sign in to continue to checkout");
     }
   };
 
-  const getCartItems = () => {
-    return cartItems
-      .map((item) => ({ ...item, product: products[item.product_id] }))
-      .filter((item) => item.product); // Only include items where we have the product data
-  };
-
-  if (loading) {
+  if (loading || cartLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
         Loading cart...
@@ -114,17 +202,19 @@ const Cart = () => {
     );
   }
 
-  const displayCartItems = getCartItems();
-
-  if (displayCartItems.length === 0) {
+  if (cartProducts.length === 0) {
     return <Empty_Cart />;
   }
+
+  // Check if any items are selected
+  const someSelected = Object.values(selectedItems).some(Boolean);
+  const allSelected = Object.values(selectedItems).every(Boolean);
 
   return (
     <div className="container mx-auto mt-20 px-4 py-8">
       <h1 className="mb-6 text-2xl font-bold">Your Shopping Cart</h1>
 
-      {hasActiveSale && totalSavings > 0 && (
+      {hasActiveSale && totalSavings > 0 && someSelected && (
         <div className="mb-6 rounded-lg bg-green-50 p-4 text-green-700">
           <p className="font-medium">
             Sale Active! You're saving{" "}
@@ -137,59 +227,93 @@ const Cart = () => {
         </div>
       )}
 
+      <div className="mb-4 flex items-center justify-between">
+        <button
+          onClick={handleSelectAll}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50"
+        >
+          {allSelected ? "Unselect All" : "Select All"}
+        </button>
+        <div className="text-sm text-gray-500">
+          {Object.values(selectedItems).filter(Boolean).length} of{" "}
+          {cartProducts.length} items selected
+        </div>
+      </div>
+
       <div className="grid gap-6">
-        {displayCartItems.map((item, index) => (
-          <CartItem
-            key={`${item.product_id}-${item.size}-${item.color}-${index}`}
-            item={item}
-            onRemove={() =>
-              handleRemoveItem(item.product_id, item.size, item.color)
-            }
-          />
-        ))}
+        {cartProducts.map((item, index) => {
+          const key = `${item.product_id}-${item.size}-${item.color}`;
+          return (
+            <CartItem
+              key={`${key}-${index}`}
+              item={item}
+              isSelected={!!selectedItems[key]}
+              onToggleSelection={() =>
+                handleToggleSelection(item.product_id, item.size, item.color)
+              }
+              onRemove={() =>
+                handleRemoveItem(item.product_id, item.size, item.color)
+              }
+            />
+          );
+        })}
       </div>
 
       <div className="mt-8 rounded-lg bg-gray-50 p-6">
-        {hasActiveSale && totalSavings > 0 ? (
+        {someSelected ? (
           <>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-gray-600">Original Price:</span>
-              <span className="text-gray-600 line-through">
-                <IndianRupee size={16} className="inline" />
-                {originalTotal}
-              </span>
-            </div>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-green-600">Discount:</span>
-              <span className="text-green-600">
-                - <IndianRupee size={16} className="inline" />
-                {Math.floor(totalSavings)}
-              </span>
-            </div>
-            <div className="mb-4 flex items-center justify-between border-t pt-2">
-              <span className="text-lg font-medium">Total:</span>
-              <span className="text-xl font-bold">
-                <IndianRupee size={20} className="inline font-bold" />
-                {Math.floor(discountedTotal)}
-              </span>
-            </div>
+            {hasActiveSale && totalSavings > 0 ? (
+              <>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-gray-600">Original Price:</span>
+                  <span className="text-gray-600 line-through">
+                    <IndianRupee size={16} className="inline" />
+                    {originalTotal}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center justify-between">
+                  <span className="text-green-600">Discount:</span>
+                  <span className="text-green-600">
+                    - <IndianRupee size={16} className="inline" />
+                    {Math.floor(totalSavings)}
+                  </span>
+                </div>
+                <div className="mb-4 flex items-center justify-between border-t pt-2">
+                  <span className="text-lg font-medium">Total:</span>
+                  <span className="text-xl font-bold">
+                    <IndianRupee size={20} className="inline font-bold" />
+                    {Math.floor(discountedTotal)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-lg font-medium">Total:</span>
+                <span className="text-xl font-bold">
+                  <IndianRupee size={20} className="inline font-bold" />
+                  {Math.floor(originalTotal)}
+                </span>
+              </div>
+            )}
+
+            <button
+              onClick={handleCheckout}
+              className="w-full rounded-md border border-primary bg-primary py-3 font-medium text-white transition-colors hover:bg-white hover:text-primary"
+            >
+              Proceed to Checkout
+            </button>
           </>
         ) : (
-          <div className="mb-4 flex items-center justify-between">
-            <span className="text-lg font-medium">Total:</span>
-            <span className="text-xl font-bold">
-              <IndianRupee size={20} className="inline font-bold" />
-              {Math.floor(originalTotal)}
-            </span>
+          <div className="text-center text-gray-500">
+            <p className="mb-4">No items selected</p>
+            <button
+              onClick={handleSelectAll}
+              className="w-full rounded-md border border-primary bg-white py-3 font-medium text-primary transition-colors hover:bg-primary hover:text-white"
+            >
+              Select Items to Checkout
+            </button>
           </div>
         )}
-
-        <button
-          onClick={handleCheckout}
-          className="w-full rounded-md border border-primary bg-primary py-3 font-medium text-white transition-colors hover:bg-white hover:text-primary"
-        >
-          Proceed to Checkout
-        </button>
       </div>
     </div>
   );
