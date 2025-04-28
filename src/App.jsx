@@ -71,14 +71,7 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/completion"
-          element={
-            <ProtectedRoute>
-              <Completion />
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/order-success/:orderId" element={<Completion />} />
         <Route path="/features" element={<Features />} />
         <Route path="/services" element={<Services />} />
         <Route path="/news" element={<News />} />

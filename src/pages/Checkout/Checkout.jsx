@@ -6,8 +6,18 @@ import { useCart } from "../../context/cart/cart_context";
 import { toast } from "react-toastify";
 import { FiCheck, FiPlus } from "react-icons/fi";
 import AddressForm from "./_components/AddressForm";
-import { doc, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db } from "../../firebase/config";
+
+// Get API base URL from environment variables
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -30,6 +40,7 @@ const Checkout = () => {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   // Load addresses and set default
   useEffect(() => {
@@ -65,6 +76,21 @@ const Checkout = () => {
       navigate("/cart");
     }
   }, [checkoutItems, checkoutLoading, navigate]);
+
+  // Load Razorpay script
+  useEffect(() => {
+    const loadRazorpayScript = async () => {
+      return new Promise((resolve) => {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+      });
+    };
+
+    loadRazorpayScript();
+  }, []);
 
   // Handle address selection
   const handleAddressSelect = (addressId) => {
@@ -136,12 +162,165 @@ const Checkout = () => {
     setIsAddingNewAddress(false);
   };
 
-  // Handle place order
-  const handlePlaceOrder = async () => {
-    toast.success("Order has been placed successfully!");
-    await clearCart();
-    navigate("/");
-    window.scrollTo(0, 0);
+  // Create order in Firebase
+  const createOrder = async (paymentId, paymentStatus) => {
+    try {
+      const selectedAddress = addresses.find(
+        (addr) => addr.id === selectedAddressId
+      );
+
+      const orderData = {
+        userId: currentUser.uid,
+        items: checkoutItems,
+        deliveryAddress: selectedAddress,
+        payment: {
+          id: paymentId,
+          status: paymentStatus,
+          amount: finalTotal,
+          currency: "INR",
+          method: "Razorpay",
+        },
+        subtotal,
+        discount: totalSavings,
+        deliveryCost,
+        total: finalTotal,
+        status: "processing",
+        createdAt: serverTimestamp(),
+      };
+
+      const orderRef = await addDoc(collection(db, "orders"), orderData);
+      return orderRef.id;
+    } catch (error) {
+      console.error("Error creating order:", error);
+      throw error;
+    }
+  };
+
+  // Handle Razorpay payment
+  const handlePayment = async () => {
+    try {
+      setPaymentLoading(true);
+
+      // Get selected address
+      const selectedAddress = addresses.find(
+        (addr) => addr.id === selectedAddressId
+      );
+
+      if (!selectedAddress) {
+        toast.error("Please select a delivery address");
+        setPaymentLoading(false);
+        return;
+      }
+
+      // Create order on your server and get Razorpay order ID
+      const response = await fetch(
+        `${API_BASE_URL}/api/create-razorpay-order`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: finalTotal * 100, // Razorpay expects amount in paise
+            currency: "INR",
+            receipt: `receipt_${Date.now()}`,
+            userId: currentUser.uid,
+            items: checkoutItems,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to create order");
+      }
+
+      const orderData = await response.json();
+
+      if (!window.Razorpay) {
+        toast.error("Razorpay SDK failed to load. Please try again later.");
+        setPaymentLoading(false);
+        return;
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: finalTotal * 100,
+        currency: "INR",
+        name: "Your E-commerce Store",
+        description: "Purchase from Your E-commerce Store",
+        order_id: orderData.id,
+        prefill: {
+          name: selectedAddress.fullName,
+          email: currentUser.email,
+          contact: selectedAddress.phone,
+        },
+        notes: {
+          address: `${selectedAddress.street}, ${selectedAddress.city}, ${
+            selectedAddress.stateName || selectedAddress.state
+          } - ${selectedAddress.zipCode}`,
+        },
+        theme: {
+          color: "#3399cc", // Match your primary color
+        },
+        handler: async function (response) {
+          try {
+            // Verify payment on your server
+            const verificationResponse = await fetch(
+              `${API_BASE_URL}/api/verify-payment`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                }),
+              }
+            );
+
+            if (!verificationResponse.ok) {
+              throw new Error("Payment verification failed");
+            }
+
+            const verificationData = await verificationResponse.json();
+
+            if (verificationData.verified) {
+              // Payment successful, create order in Firebase
+              const orderId = await createOrder(
+                response.razorpay_payment_id,
+                "completed"
+              );
+              await clearCart();
+
+              toast.success("Payment successful! Order has been placed.");
+              navigate(`/order-success/${orderId}`);
+            } else {
+              throw new Error("Payment verification failed");
+            }
+          } catch (error) {
+            console.error("Payment verification error:", error);
+            toast.error("Payment verification failed. Please contact support.");
+          } finally {
+            setPaymentLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setPaymentLoading(false);
+            toast.info("Payment cancelled");
+          },
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Payment processing failed. Please try again.");
+      setPaymentLoading(false);
+    }
   };
 
   if (pageLoading || checkoutLoading) {
@@ -406,10 +585,20 @@ const Checkout = () => {
 
               {/* Payment Button */}
               <button
-                onClick={handlePlaceOrder}
-                className="hover:bg-primary-dark mt-6 w-full rounded bg-primary py-3 text-white transition-colors"
+                onClick={handlePayment}
+                disabled={paymentLoading}
+                className={`hover:bg-primary-dark mt-6 w-full rounded bg-primary py-3 text-white transition-colors ${
+                  paymentLoading ? "cursor-not-allowed opacity-70" : ""
+                }`}
               >
-                Place Order
+                {paymentLoading ? (
+                  <span className="flex items-center justify-center">
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    Processing...
+                  </span>
+                ) : (
+                  "Pay & Place Order"
+                )}
               </button>
             </div>
           </div>
