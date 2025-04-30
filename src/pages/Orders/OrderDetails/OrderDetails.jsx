@@ -200,8 +200,8 @@ const OrderDetailsPage = () => {
               <h2 className="font-semibold">Order Tracking</h2>
             </div>
             <div className="p-6">
-              {order.status === "shipped" ||
-                (order.status === "delivered" && order.trackingId && (
+              {(order.status === "shipped" || order.status === "delivered") &&
+                order.trackingId && (
                   <div className="mb-4 rounded-lg bg-blue-50 p-4">
                     <div className="flex">
                       <div className="flex-1">
@@ -222,7 +222,7 @@ const OrderDetailsPage = () => {
                       </a>
                     </div>
                   </div>
-                ))}
+                )}
 
               {/* Order Timeline */}
               <div className="relative">
