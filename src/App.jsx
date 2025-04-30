@@ -26,6 +26,8 @@ import {
   ArtisansPage,
   SingleArtisanPage,
   SalePage,
+  Orders,
+  OrderDetails,
 } from "./pages";
 import { measurementID } from "./utils/constants";
 import { useAuth } from "./context/auth/auth_context";
@@ -68,6 +70,22 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Checkout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders/:id"
+          element={
+            <ProtectedRoute>
+              <OrderDetails />
             </ProtectedRoute>
           }
         />

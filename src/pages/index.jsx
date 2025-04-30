@@ -14,6 +14,8 @@ import Profile from "./Profile/Profile";
 import ArtisansPage from "./Artisans/Artisans";
 import SingleArtisanPage from "./Artisans/SingleArtisan/SingleArtisan";
 import SalePage from "./Sale/Sale";
+import Orders from "./Orders/Orders";
+import OrderDetails from "./Orders/OrderDetails/OrderDetails";
 
 export {
   Features,
@@ -32,4 +34,6 @@ export {
   ArtisansPage,
   SingleArtisanPage,
   SalePage,
+  Orders,
+  OrderDetails,
 };

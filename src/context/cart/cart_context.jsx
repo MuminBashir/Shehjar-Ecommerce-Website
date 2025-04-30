@@ -284,7 +284,7 @@ export const CartProvider = ({ children }) => {
 
   // Remove item from cart
   const removeFromCart = useCallback(
-    async (productId, selectedSize, selectedColor) => {
+    async (productId, selectedSize, selectedColor, showToast = true) => {
       try {
         setLoading(true);
 
@@ -305,7 +305,9 @@ export const CartProvider = ({ children }) => {
 
             const userRef = doc(db, "users", currentUser.uid);
             await updateDoc(userRef, { cart: updatedCart });
-            toast.success("Item removed from cart");
+            if (showToast) {
+              toast.success("Item removed from cart");
+            }
           }
         } else {
           // Remove from localStorage if user is not logged in
@@ -322,7 +324,9 @@ export const CartProvider = ({ children }) => {
 
           localStorage.setItem("cart", JSON.stringify(updatedCart));
           setCartItems(updatedCart);
-          toast.success("Item removed from cart");
+          if (showToast) {
+            toast.success("Item removed from cart");
+          }
         }
       } catch (error) {
         console.error("Error removing from cart:", error);

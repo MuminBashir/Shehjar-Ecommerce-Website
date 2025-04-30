@@ -12,6 +12,7 @@ import {
   collection,
   addDoc,
   serverTimestamp,
+  arrayUnion,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 
@@ -32,7 +33,7 @@ const Checkout = () => {
     finalTotal,
   } = useCheckout();
   const { currentUser } = useAuth();
-  const { clearCart } = useCart();
+  const { removeFromCart } = useCart();
 
   // States
   const [step, setStep] = useState(1);
@@ -188,8 +189,17 @@ const Checkout = () => {
         createdAt: serverTimestamp(),
       };
 
+      // Create the order document
       const orderRef = await addDoc(collection(db, "orders"), orderData);
-      return orderRef.id;
+      const orderId = orderRef.id;
+
+      // Update the user's orders array in Firestore
+      const userRef = doc(db, "users", currentUser.uid);
+      await updateDoc(userRef, {
+        orders: arrayUnion(orderId),
+      });
+
+      return orderId;
     } catch (error) {
       console.error("Error creating order:", error);
       throw error;
@@ -292,7 +302,15 @@ const Checkout = () => {
                 response.razorpay_payment_id,
                 "completed"
               );
-              await clearCart();
+
+              checkoutItems.forEach(async (item) => {
+                await removeFromCart(
+                  item.product_id,
+                  item.size,
+                  item.color,
+                  false
+                );
+              });
 
               toast.success("Payment successful! Order has been placed.");
               navigate(`/order-success/${orderId}`);
@@ -468,7 +486,7 @@ const Checkout = () => {
                   : ""
               }`}
             >
-              Continue to Review & Payment
+              Continue to Payment
             </button>
           </div>
         </div>

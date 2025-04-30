@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/auth/auth_context";
 import { BsPersonCircle } from "react-icons/bs";
-import { FiLogOut, FiUser } from "react-icons/fi";
+import { FiBox, FiLogOut, FiPackage, FiUser } from "react-icons/fi";
 
 const UserBtn = () => {
   const { currentUser, logout } = useAuth();
@@ -72,14 +72,21 @@ const UserBtn = () => {
           </div>
           <Link
             to="/profile"
-            className="block flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             onClick={() => setIsOpen(false)}
           >
             <FiUser className="mr-2" /> Profile
           </Link>
+          <Link
+            to="/orders"
+            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+            onClick={() => setIsOpen(false)}
+          >
+            <FiPackage className="mr-2" /> Orders
+          </Link>
           <button
             onClick={handleLogout}
-            className="block flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+            className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
           >
             <FiLogOut className="mr-2" /> Logout
           </button>
