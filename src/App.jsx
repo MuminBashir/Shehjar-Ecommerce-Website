@@ -40,11 +40,6 @@ function AppContent() {
   const hideLayout = location.pathname === "/login";
   const { currentUser } = useAuth();
 
-  // Redirect logged-in users away from /login
-  if (currentUser && location.pathname === "/login") {
-    return <Navigate to="/" replace />;
-  }
-
   return (
     <>
       {!hideLayout && <Navbar />}

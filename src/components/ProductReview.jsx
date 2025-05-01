@@ -122,9 +122,16 @@ const ProductReview = ({
     checkAdminStatus();
   }, [currentUser]);
 
-  // Check if user has purchased the product using OrdersContext data
+  // Check if user has purchased the product - only for logged in users
   useEffect(() => {
-    if (!currentUser || ordersLoading) {
+    if (!currentUser) {
+      setHasPurchased(false);
+      setHasReviewed(false);
+      setIsLoading(false);
+      return;
+    }
+
+    if (ordersLoading) {
       setIsLoading(true);
       return;
     }
@@ -157,7 +164,7 @@ const ProductReview = ({
     }
   }, [currentUser, productId, orders, ordersLoading, rawProductRatings]);
 
-  // Process reviews and get user information
+  // Process reviews and get user information - this should run regardless of login state
   useEffect(() => {
     const processReviews = async () => {
       if (!rawProductRatings || rawProductRatings.length === 0) {
@@ -372,8 +379,10 @@ const ProductReview = ({
     );
   }
 
-  // Determine if we're waiting for any data
-  const isContentLoading = productLoading || ordersLoading || isLoading;
+  // Determine if we're waiting for product data only
+  // Don't include ordersLoading or isLoading when logged out
+  const isContentLoading =
+    productLoading || (currentUser && (ordersLoading || isLoading));
 
   return (
     <div className="mt-12 border-t border-gray-200 pt-8">
@@ -389,92 +398,103 @@ const ProductReview = ({
         </div>
       )}
 
-      {/* Review Form */}
-      <div className="mt-6 rounded-lg bg-gray-50 p-6">
-        <form onSubmit={handleSubmitReview}>
-          <h3 className="mb-4 text-xl font-semibold">Leave a Review</h3>
+      {/* Review Form - Only show when logged in */}
+      {currentUser && (
+        <div className="mt-6 rounded-lg bg-gray-50 p-6">
+          <form onSubmit={handleSubmitReview}>
+            <h3 className="mb-4 text-xl font-semibold">Leave a Review</h3>
 
-          <div className="mb-4">
-            <label className="mb-1 block text-sm font-medium">
-              Your Rating
-            </label>
-            <div className="inline-flex">
-              <Rating
-                onClick={handleRatingChange}
-                initialValue={rating}
-                size={28}
-                fillColor="#FFDF00"
-                allowFraction
-                SVGstyle={{ display: "inline-block", marginRight: "4px" }}
-              />
+            <div className="mb-4">
+              <label className="mb-1 block text-sm font-medium">
+                Your Rating
+              </label>
+              <div className="inline-flex">
+                <Rating
+                  onClick={handleRatingChange}
+                  initialValue={rating}
+                  size={28}
+                  fillColor="#FFDF00"
+                  allowFraction
+                  SVGstyle={{ display: "inline-block", marginRight: "4px" }}
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="mb-4">
-            <label
-              htmlFor="reviewText"
-              className="mb-1 block text-sm font-medium"
-            >
-              Your Review (Optional)
-            </label>
-            <textarea
-              id="reviewText"
-              rows="4"
-              className="w-full rounded-md border border-gray-300 p-2"
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Share your thoughts about this product..."
-            ></textarea>
-          </div>
+            <div className="mb-4">
+              <label
+                htmlFor="reviewText"
+                className="mb-1 block text-sm font-medium"
+              >
+                Your Review (Optional)
+              </label>
+              <textarea
+                id="reviewText"
+                rows="4"
+                className="w-full rounded-md border border-gray-300 p-2"
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                placeholder="Share your thoughts about this product..."
+              ></textarea>
+            </div>
 
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={
-                isSubmitting ||
-                isContentLoading ||
-                (currentUser && hasReviewed) ||
-                !hasPurchased
-              }
-              className="rounded-md border border-primary bg-primary px-4 py-2 font-medium text-white transition-colors hover:bg-white hover:text-primary disabled:bg-gray-300 disabled:text-gray-500"
-            >
-              {isSubmitting
-                ? "Submitting..."
-                : isContentLoading
-                ? "Loading..."
-                : currentUser && hasReviewed
-                ? "You've already reviewed this product"
-                : "Submit Review"}
-            </button>
-          </div>
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={
+                  isSubmitting ||
+                  isContentLoading ||
+                  (currentUser && hasReviewed) ||
+                  !hasPurchased
+                }
+                className="rounded-md border border-primary bg-primary px-4 py-2 font-medium text-white transition-colors hover:bg-white hover:text-primary disabled:bg-gray-300 disabled:text-gray-500"
+              >
+                {isSubmitting
+                  ? "Submitting..."
+                  : isContentLoading
+                  ? "Loading..."
+                  : currentUser && hasReviewed
+                  ? "You've already reviewed this product"
+                  : "Submit Review"}
+              </button>
+            </div>
 
-          {/* Informational messages */}
-          {!currentUser && (
-            <p className="mt-3 text-sm text-blue-700">
-              You'll need to be logged in to submit your review.
-            </p>
-          )}
-          {currentUser && !hasPurchased && !isContentLoading && (
-            <p className="mt-3 text-sm text-amber-700">
-              Only customers who have purchased this product can leave reviews.
-            </p>
-          )}
-          {currentUser && hasPurchased && hasReviewed && !isContentLoading && (
-            <p className="mt-3 text-sm text-green-700">
-              Thanks for your review! You can delete it if you wish to update
-              it.
-            </p>
-          )}
-        </form>
-      </div>
+            {/* Informational messages */}
+            {currentUser && !hasPurchased && !isContentLoading && (
+              <p className="mt-3 text-sm text-amber-700">
+                Only customers who have purchased this product can leave
+                reviews.
+              </p>
+            )}
+            {currentUser &&
+              hasPurchased &&
+              hasReviewed &&
+              !isContentLoading && (
+                <p className="mt-3 text-sm text-green-700">
+                  Thanks for your review! You can delete it if you wish to
+                  update it.
+                </p>
+              )}
+          </form>
+        </div>
+      )}
 
-      {/* Display Reviews */}
+      {/* Login prompt when not signed in */}
+      {!currentUser && (
+        <div className="mt-6 rounded-lg bg-blue-50 p-4 text-blue-700">
+          <p>
+            You need to be logged in to leave a review. Viewing all reviews is
+            available to everyone.
+          </p>
+        </div>
+      )}
+
+      {/* Display Reviews - Make sure this section shows regardless of login status */}
       <div className="mt-8">
         <h3 className="mb-4 text-xl font-semibold">
           {reviews.length > 0 ? `${reviews.length} Reviews` : "No Reviews Yet"}
         </h3>
 
-        {isContentLoading ? (
+        {productLoading ? (
           <div className="flex items-center justify-center p-8">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
           </div>
@@ -485,7 +505,7 @@ const ProductReview = ({
                 key={review.id}
                 className="border-b border-gray-200 pb-6 last:border-0"
               >
-                <div className="flex items-center">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="mr-3 h-10 w-10 overflow-hidden rounded-full bg-gray-200">
                       {review.user.photoURL ? (
@@ -508,24 +528,22 @@ const ProductReview = ({
                     </div>
                   </div>
 
-                  {/* Delete button - Shown for current user's reviews OR for admins for all reviews */}
+                  {/* Delete button - Only show when logged in and for current user's reviews OR for admins */}
                   {(review.isCurrentUser || isAdmin) && (
-                    <div className="ml-5 mb-4 flex justify-start">
-                      <button
-                        onClick={() => openDeleteModal(review)}
-                        className="flex items-center gap-1 text-red-600 hover:text-red-800"
-                        title={
-                          isAdmin && !review.isCurrentUser
-                            ? "Admin: Delete user review"
-                            : "Delete your review"
-                        }
-                      >
-                        <Trash2 size={18} />
-                        {isAdmin && !review.isCurrentUser && (
-                          <span className="text-xs">Admin Delete</span>
-                        )}
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => openDeleteModal(review)}
+                      className="flex items-center gap-1 text-red-600 hover:text-red-800"
+                      title={
+                        isAdmin && !review.isCurrentUser
+                          ? "Admin: Delete user review"
+                          : "Delete your review"
+                      }
+                    >
+                      <Trash2 size={18} />
+                      {isAdmin && !review.isCurrentUser && (
+                        <span className="text-xs">Admin Delete</span>
+                      )}
+                    </button>
                   )}
                 </div>
 

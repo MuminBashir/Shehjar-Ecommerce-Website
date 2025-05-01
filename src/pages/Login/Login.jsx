@@ -1,13 +1,23 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/auth/auth_context";
 import googleLogo from "../../assets/googlelogo.webp";
 import shehjarlogo from "../../assets/shehjarlogo.png";
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
-  const { signInWithGoogle, fromCart, setFromCart, currentUser } = useAuth();
+  const {
+    signInWithGoogle,
+    fromCart,
+    setFromCart,
+    currentUser,
+    userDataLoading,
+    loading: authLoading,
+  } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+
+  const from = location.state?.from || "/profile"; // default to homepage
 
   const handleGoogleSignIn = async (e) => {
     e.preventDefault();
@@ -20,7 +30,7 @@ const Login = () => {
         navigate("/cart");
         setFromCart(false);
       } else {
-        navigate("/");
+        navigate("from, { replace: true }");
       }
     } catch (err) {
       console.error(err);
@@ -28,6 +38,13 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (currentUser && !userDataLoading && !authLoading) {
+      // Redirect to profile if user is already logged in
+      navigate(from, { replace: true });
+    }
+  }, [currentUser, userDataLoading, authLoading]);
 
   return (
     <div className="flex h-screen">
