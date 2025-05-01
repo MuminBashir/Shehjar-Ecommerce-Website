@@ -9,6 +9,7 @@ import ProductReview from "../../../components/ProductReview";
 import { AddToCart } from "../../../components";
 import { Rating } from "react-simple-star-rating";
 import { IndianRupee, ChevronDown, ChevronUp } from "lucide-react";
+import GenreList from "../../../components/GenreList";
 
 // GI Certified Seal Component
 const GICertifiedSeal = () => (
@@ -413,6 +414,12 @@ const SingleProduct = () => {
         productId={id}
         productRatings={productData.ratings || []}
       />
+
+      {/* Product Recommendaiton */}
+      <div className="my-16 flex flex-col gap-6">
+        <GenreList genre="Recommended" title="RECOMMENDED PRODUCTS" />
+        <GenreList genre="BestSeller" title="BEST SELLERS" />
+      </div>
     </div>
   );
 };
