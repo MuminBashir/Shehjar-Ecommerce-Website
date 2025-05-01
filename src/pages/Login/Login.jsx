@@ -40,7 +40,7 @@ const Login = () => {
   };
 
   useEffect(() => {
-    if (currentUser && !userDataLoading && !authLoading) {
+    if (currentUser && !userDataLoading && !authLoading && !fromCart) {
       // Redirect to profile if user is already logged in
       navigate(from, { replace: true });
     }
