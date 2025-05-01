@@ -17,7 +17,8 @@ const Login = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const from = location.state?.from || "/profile"; // default to homepage
+  const from =
+    location.state?.from === "/login" ? "/" : location.state?.from || "/";
 
   const handleGoogleSignIn = async (e) => {
     e.preventDefault();
