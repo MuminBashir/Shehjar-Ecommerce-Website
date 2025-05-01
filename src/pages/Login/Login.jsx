@@ -31,7 +31,11 @@ const Login = () => {
         navigate("/cart");
         setFromCart(false);
       } else {
-        navigate("from, { replace: true }");
+        if (typeof from === "string") {
+          navigate(from, { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
       }
     } catch (err) {
       console.error(err);
