@@ -13,6 +13,7 @@ import {
   addDoc,
   serverTimestamp,
   arrayUnion,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 
@@ -47,7 +48,7 @@ const Checkout = () => {
   useEffect(() => {
     if (currentUser && currentUser.addresses) {
       setAddresses(currentUser.addresses);
-
+      window.scrollTo(0, 0);
       // Only set default address if no address is currently selected
       if (!selectedAddressId) {
         // Find default address if exists
@@ -161,6 +162,66 @@ const Checkout = () => {
   // Cancel adding new address
   const handleCancelAddAddress = () => {
     setIsAddingNewAddress(false);
+  };
+
+  // NEW FUNCTION: Update product quantities in inventory
+  const updateProductInventory = async (orderItems) => {
+    try {
+      console.log("Updating product inventory for completed order...");
+
+      // Process each item in the order
+      for (const item of orderItems) {
+        const { product_id, color, size, quantity } = item;
+
+        // Get the product document
+        const productRef = doc(db, "products", product_id);
+        const productSnap = await getDoc(productRef);
+
+        if (!productSnap.exists()) {
+          console.error(`Product ${product_id} not found in database`);
+          continue;
+        }
+
+        const productData = productSnap.data();
+        const combinations = [...(productData.combinations || [])];
+
+        // Find the matching combination by color and size
+        const combinationIndex = combinations.findIndex(
+          (combo) => combo.color === color && combo.size === size
+        );
+
+        if (combinationIndex === -1) {
+          console.error(
+            `Combination for ${color}/${size} not found in product ${product_id}`
+          );
+          continue;
+        }
+
+        // Update the quantity, ensuring it doesn't go below 0
+        const newQuantity = Math.max(
+          0,
+          combinations[combinationIndex].quantity - quantity
+        );
+        combinations[combinationIndex].quantity = newQuantity;
+
+        console.log(
+          `Updating product ${product_id} ${color}/${size} from ${
+            combinations[combinationIndex].quantity + quantity
+          } to ${newQuantity}`
+        );
+
+        // Update the product document in Firestore
+        await updateDoc(productRef, {
+          combinations: combinations,
+        });
+      }
+
+      console.log("Product inventory successfully updated");
+    } catch (error) {
+      console.error("Error updating product inventory:", error);
+      // We'll continue with the order process even if inventory update fails
+      // But we'll log the error for debugging
+    }
   };
 
   // Create order in Firebase
@@ -303,14 +364,29 @@ const Checkout = () => {
                 "completed"
               );
 
-              checkoutItems.forEach(async (item) => {
-                await removeFromCart(
+              console.log(
+                "Order created successfully, now updating inventory..."
+              );
+
+              // NEW: Update product inventory
+              await updateProductInventory(checkoutItems);
+
+              console.log("Inventory updated, now removing items from cart");
+
+              // Create an array of promises for removing each item
+              const removalPromises = checkoutItems.map((item) =>
+                removeFromCart(
                   item.product_id,
                   item.size,
                   item.color,
-                  false
-                );
-              });
+                  false // no toast for each removal
+                )
+              );
+
+              // Wait for all removals to complete
+              await Promise.all(removalPromises);
+
+              console.log("All items removed from cart successfully");
 
               toast.success("Payment successful! Order has been placed.");
               navigate(`/order-success/${orderId}`);

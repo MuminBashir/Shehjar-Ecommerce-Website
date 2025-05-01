@@ -34,6 +34,7 @@ const Carousel = ({ isMobile = false }) => {
   };
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (banners.length > 1) {
       const timer = setInterval(nextSlide, 5000);
       return () => clearInterval(timer);

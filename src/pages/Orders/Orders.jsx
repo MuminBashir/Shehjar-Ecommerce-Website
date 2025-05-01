@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useOrders } from "../../context/orders/order_context";
 import {
@@ -8,6 +8,7 @@ import {
   FiXCircle,
   FiChevronRight,
 } from "react-icons/fi";
+import Loading from "../../components/Loading";
 
 const Orders = () => {
   const { orders, loading } = useOrders();
@@ -16,9 +17,9 @@ const Orders = () => {
   const getStatusIcon = (status) => {
     switch (status.toLowerCase()) {
       case "processing":
-        return <FiPackage className="text-blue-500" />;
+        return <FiPackage className="text-yellow-500" />;
       case "shipped":
-        return <FiTruck className="text-orange-500" />;
+        return <FiTruck className="text-blue-500" />;
       case "delivered":
         return <FiCheckCircle className="text-green-500" />;
       case "cancelled":
@@ -32,9 +33,9 @@ const Orders = () => {
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "processing":
-        return "text-blue-600 bg-blue-50";
+        return "text-yellow-600 bg-yellow-50";
       case "shipped":
-        return "text-orange-600 bg-orange-50";
+        return "text-blue-600 bg-blue-50";
       case "delivered":
         return "text-green-600 bg-green-50";
       case "cancelled":
@@ -55,10 +56,14 @@ const Orders = () => {
     }).format(date);
   };
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [orders]);
+
   if (loading) {
     return (
       <div className="container mx-auto mt-20 flex justify-center px-4 py-16">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <Loading />
       </div>
     );
   }
@@ -93,7 +98,9 @@ const Orders = () => {
             >
               <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
                 <div>
-                  <h2 className="font-medium">Order #{order.id.slice(-8)}</h2>
+                  <h2 className="font-medium">
+                    Order #{order.id.slice(-8).toUpperCase()}
+                  </h2>
                   <p className="text-sm text-gray-500">
                     {formatDate(order.createdAt)}
                   </p>
@@ -142,9 +149,17 @@ const Orders = () => {
                     </h3>
                     <p className="text-sm">{order.deliveryAddress.fullName}</p>
                     <p className="text-sm text-gray-500">
+                      {order.deliveryAddress.street}
+                    </p>
+                    <p className="text-sm text-gray-500">
                       {order.deliveryAddress.city},{" "}
                       {order.deliveryAddress.stateName ||
                         order.deliveryAddress.state}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {order.deliveryAddress.countryName ||
+                        order.deliveryAddress.country}
+                      , {order.deliveryAddress.zipCode}
                     </p>
                   </div>
 

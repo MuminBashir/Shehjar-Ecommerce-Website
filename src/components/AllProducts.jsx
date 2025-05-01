@@ -795,6 +795,7 @@ const AllProducts = () => {
 
   // Initial load and response to filter changes
   useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top on load
     const isNewQuery = hasQueryChanged(
       currentQueryRef.current,
       debouncedFilters

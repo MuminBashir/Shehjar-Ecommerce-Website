@@ -286,8 +286,6 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = useCallback(
     async (productId, selectedSize, selectedColor, showToast = true) => {
       try {
-        setLoading(true);
-
         if (currentUser) {
           // Remove from Firebase if user is logged in
           if (userDoc?.exists()) {
@@ -305,9 +303,14 @@ export const CartProvider = ({ children }) => {
 
             const userRef = doc(db, "users", currentUser.uid);
             await updateDoc(userRef, { cart: updatedCart });
+
             if (showToast) {
               toast.success("Item removed from cart");
             }
+
+            // Let Firestore listener update the state naturally
+            // instead of manipulating local state
+            return true;
           }
         } else {
           // Remove from localStorage if user is not logged in
@@ -324,15 +327,19 @@ export const CartProvider = ({ children }) => {
 
           localStorage.setItem("cart", JSON.stringify(updatedCart));
           setCartItems(updatedCart);
+
           if (showToast) {
             toast.success("Item removed from cart");
           }
+
+          return true;
         }
       } catch (error) {
         console.error("Error removing from cart:", error);
-        toast.error(`Failed to remove item from cart: ${error.message}`);
-      } finally {
-        setLoading(false);
+        if (showToast) {
+          toast.error(`Failed to remove item from cart: ${error.message}`);
+        }
+        return false;
       }
     },
     [cartItems, currentUser, userDoc]

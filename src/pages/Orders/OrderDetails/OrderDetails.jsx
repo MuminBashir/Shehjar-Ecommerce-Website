@@ -19,6 +19,7 @@ const OrderDetailsPage = () => {
   const [orderLoading, setOrderLoading] = useState(true);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     const fetchOrderDetails = async () => {
       try {
         // First check if the order is already in the orders array
@@ -88,10 +89,10 @@ const OrderDetailsPage = () => {
 
   return (
     <div className="container mx-auto mt-20 max-w-screen-xl px-4 py-8">
-      <div className="mb-6 flex items-center">
+      <div className="mb-6 flex flex-col justify-center gap-5">
         <Link
           to="/orders"
-          className="mr-4 flex items-center text-gray-600 hover:text-primary"
+          className="mr-4 flex items-center text-primary hover:underline"
         >
           <FiArrowLeft className="mr-2" />
           Back to Orders
@@ -105,7 +106,9 @@ const OrderDetailsPage = () => {
           <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
             <div className="bg-gray-50 px-6 py-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-semibold">Order #{order.id.slice(-8)}</h2>
+                <h2 className="font-semibold">
+                  Order #{order.id.slice(-8).toUpperCase()}
+                </h2>
                 <div className="flex items-center">
                   <span className="mr-3 text-sm text-gray-600">
                     Placed on {formatDate(order.createdAt)}
@@ -128,7 +131,7 @@ const OrderDetailsPage = () => {
                 <div className="mt-2 sm:mt-0">
                   <span
                     className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-                      order.payment.status === "paid"
+                      order.payment.status === "completed"
                         ? "bg-green-50 text-green-600"
                         : "bg-yellow-50 text-yellow-600"
                     }`}
@@ -455,8 +458,8 @@ const OrderDetailsPage = () => {
 // Helper function to render status badge
 const renderStatusBadge = (status) => {
   const statusClasses = {
-    processing: "bg-blue-50 text-blue-700",
-    shipped: "bg-orange-50 text-orange-700",
+    processing: "bg-yellow-50 text-yellow-700",
+    shipped: "bg-blue-50 text-blue-700",
     delivered: "bg-green-50 text-green-700",
     cancelled: "bg-red-50 text-red-700",
   };

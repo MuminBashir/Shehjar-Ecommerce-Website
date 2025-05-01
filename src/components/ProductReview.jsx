@@ -6,7 +6,6 @@ import {
   updateDoc,
   arrayUnion,
   arrayRemove,
-  getDoc,
   collection,
   query,
   where,
@@ -15,9 +14,16 @@ import {
 import { useDocument } from "react-firebase-hooks/firestore";
 import { db } from "../firebase/config";
 import { useAuth } from "../context/auth/auth_context";
-import { User, ChevronDown, Trash2, XCircle } from "lucide-react";
+import { useOrders } from "../context/orders/order_context";
+import { User, ChevronDown, Trash2, XCircle, ShieldCheck } from "lucide-react";
 
-const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, reviewId }) => {
+const DeleteConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  reviewId,
+  isAdminDeleting,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -33,8 +39,9 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, reviewId }) => {
           </button>
         </div>
         <p className="mb-6 text-gray-700">
-          Are you sure you want to delete this review? This action cannot be
-          undone.
+          {isAdminDeleting
+            ? "As an admin, you're about to delete a user's review. This action cannot be undone."
+            : "Are you sure you want to delete this review? This action cannot be undone."}
         </p>
         <div className="flex justify-end space-x-3">
           <button
@@ -60,6 +67,8 @@ const ProductReview = ({
   productRatings: initialProductRatings,
 }) => {
   const { currentUser } = useAuth();
+  const { orders, loading: ordersLoading } = useOrders();
+
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,6 +81,8 @@ const ProductReview = ({
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
   const [rawProductRatings, setRawProductRatings] = useState([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdminDeleting, setIsAdminDeleting] = useState(false);
 
   // Use react-firebase-hooks to listen to the product document
   const [productDoc, productLoading, productError] = useDocument(
@@ -88,50 +99,63 @@ const ProductReview = ({
     }
   }, [productDoc, initialProductRatings]);
 
-  // Check if user has purchased the product and if they've already left a review
+  // Check if current user is an admin
   useEffect(() => {
-    const checkPurchaseAndReview = async () => {
+    const checkAdminStatus = async () => {
       if (!currentUser) {
-        setHasPurchased(false);
-        setIsLoading(false);
+        setIsAdmin(false);
         return;
       }
 
       try {
-        // Check if user has purchased the product
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
+        const adminsRef = collection(db, "admins");
+        const q = query(adminsRef, where("email", "==", currentUser.email));
+        const querySnapshot = await getDocs(q);
 
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          const orders = userData.orders || [];
-          const purchased = orders.some(
-            (order) =>
-              order.items &&
-              order.items.some((item) => item.product_id === productId)
-          );
-          setHasPurchased(purchased);
-
-          // Check if user has already reviewed this product
-          if (rawProductRatings && rawProductRatings.length > 0) {
-            const alreadyReviewed = rawProductRatings.some(
-              (review) => review.email === currentUser.email
-            );
-            setHasReviewed(alreadyReviewed);
-          } else {
-            setHasReviewed(false);
-          }
-        }
+        setIsAdmin(!querySnapshot.empty);
       } catch (error) {
-        console.error("Error checking purchase history:", error);
-        toast.error("Unable to verify purchase history");
-      } finally {
-        setIsLoading(false);
+        console.error("Error checking admin status:", error);
+        setIsAdmin(false);
       }
     };
 
-    checkPurchaseAndReview();
-  }, [currentUser, productId, rawProductRatings]);
+    checkAdminStatus();
+  }, [currentUser]);
+
+  // Check if user has purchased the product using OrdersContext data
+  useEffect(() => {
+    if (!currentUser || ordersLoading) {
+      setIsLoading(true);
+      return;
+    }
+
+    try {
+      // Check if the user has purchased this product from orders data
+      const hasBoughtProduct = orders.some(
+        (order) =>
+          order.items &&
+          order.items.some((item) => item.product_id === productId)
+      );
+
+      setHasPurchased(hasBoughtProduct);
+
+      // Check if user has already reviewed this product
+      if (rawProductRatings && rawProductRatings.length > 0) {
+        const alreadyReviewed = rawProductRatings.some(
+          (review) => review.email === currentUser.email
+        );
+        setHasReviewed(alreadyReviewed);
+      } else {
+        setHasReviewed(false);
+      }
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error checking purchase history:", error);
+      toast.error("Unable to verify purchase history");
+      setIsLoading(false);
+    }
+  }, [currentUser, productId, orders, ordersLoading, rawProductRatings]);
 
   // Process reviews and get user information
   useEffect(() => {
@@ -213,17 +237,25 @@ const ProductReview = ({
   };
 
   const openDeleteModal = (review) => {
-    if (!currentUser || review.email !== currentUser.email) {
-      toast.error("You can only delete your own reviews");
+    // Check if user is admin or the review owner
+    if (!currentUser) {
+      toast.error("Please log in to perform this action");
       return;
     }
-    setReviewToDelete(review);
-    setDeleteModalOpen(true);
+
+    if (review.email === currentUser.email || isAdmin) {
+      setReviewToDelete(review);
+      setIsAdminDeleting(isAdmin && review.email !== currentUser.email);
+      setDeleteModalOpen(true);
+    } else {
+      toast.error("You can only delete your own reviews");
+    }
   };
 
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
     setReviewToDelete(null);
+    setIsAdminDeleting(false);
   };
 
   const confirmDeleteReview = async (reviewId) => {
@@ -236,20 +268,31 @@ const ProductReview = ({
       return;
     }
 
+    // Check if user is admin or the review owner
+    if (reviewToRemove.email !== currentUser.email && !isAdmin) {
+      toast.error("You don't have permission to delete this review");
+      closeDeleteModal();
+      return;
+    }
+
     try {
       const productRef = doc(db, "products", productId);
 
       // Use the original review object that came from Firestore
-      // This is crucial for arrayRemove to work correctly
       await updateDoc(productRef, {
         ratings: arrayRemove(reviewToRemove.originalReview),
       });
 
-      toast.success("Review deleted successfully!");
-      setHasReviewed(false);
+      if (isAdminDeleting) {
+        toast.success("Review deleted successfully by admin!");
+      } else {
+        toast.success("Review deleted successfully!");
+        setHasReviewed(false);
+      }
+
       closeDeleteModal();
 
-      // We don't need to manually update the UI since we're using the useDocument hook
+      // No need to manually update UI - the useDocument hook will handle it
     } catch (error) {
       console.error("Error deleting review:", error);
       toast.error("Failed to delete review. Please try again.");
@@ -329,9 +372,22 @@ const ProductReview = ({
     );
   }
 
+  // Determine if we're waiting for any data
+  const isContentLoading = productLoading || ordersLoading || isLoading;
+
   return (
     <div className="mt-12 border-t border-gray-200 pt-8">
       <h2 className="text-2xl font-bold">Customer Reviews</h2>
+
+      {/* Admin Badge */}
+      {isAdmin && (
+        <div className="mt-2 flex items-center gap-1 rounded-md bg-blue-50 p-2 text-blue-700">
+          <ShieldCheck size={16} />
+          <span className="text-sm font-medium">
+            Admin Mode: You can delete any review
+          </span>
+        </div>
+      )}
 
       {/* Review Form */}
       <div className="mt-6 rounded-lg bg-gray-50 p-6">
@@ -374,11 +430,18 @@ const ProductReview = ({
           <div className="flex gap-3">
             <button
               type="submit"
-              disabled={isSubmitting || (currentUser && hasReviewed)}
+              disabled={
+                isSubmitting ||
+                isContentLoading ||
+                (currentUser && hasReviewed) ||
+                !hasPurchased
+              }
               className="rounded-md border border-primary bg-primary px-4 py-2 font-medium text-white transition-colors hover:bg-white hover:text-primary disabled:bg-gray-300 disabled:text-gray-500"
             >
               {isSubmitting
                 ? "Submitting..."
+                : isContentLoading
+                ? "Loading..."
                 : currentUser && hasReviewed
                 ? "You've already reviewed this product"
                 : "Submit Review"}
@@ -391,9 +454,15 @@ const ProductReview = ({
               You'll need to be logged in to submit your review.
             </p>
           )}
-          {currentUser && !hasPurchased && !isLoading && (
+          {currentUser && !hasPurchased && !isContentLoading && (
             <p className="mt-3 text-sm text-amber-700">
               Only customers who have purchased this product can leave reviews.
+            </p>
+          )}
+          {currentUser && hasPurchased && hasReviewed && !isContentLoading && (
+            <p className="mt-3 text-sm text-green-700">
+              Thanks for your review! You can delete it if you wish to update
+              it.
             </p>
           )}
         </form>
@@ -405,7 +474,7 @@ const ProductReview = ({
           {reviews.length > 0 ? `${reviews.length} Reviews` : "No Reviews Yet"}
         </h3>
 
-        {productLoading ? (
+        {isContentLoading ? (
           <div className="flex items-center justify-center p-8">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
           </div>
@@ -439,15 +508,22 @@ const ProductReview = ({
                     </div>
                   </div>
 
-                  {/* Delete button - Only shown for the current user's reviews */}
-                  {review.isCurrentUser && (
-                    <div className="ml-5 mb-2 flex items-center gap-3">
+                  {/* Delete button - Shown for current user's reviews OR for admins for all reviews */}
+                  {(review.isCurrentUser || isAdmin) && (
+                    <div className="ml-5 mb-4 flex justify-start">
                       <button
                         onClick={() => openDeleteModal(review)}
-                        className="text-red-600 hover:text-red-800"
-                        title="Delete review"
+                        className="flex items-center gap-1 text-red-600 hover:text-red-800"
+                        title={
+                          isAdmin && !review.isCurrentUser
+                            ? "Admin: Delete user review"
+                            : "Delete your review"
+                        }
                       >
                         <Trash2 size={18} />
+                        {isAdmin && !review.isCurrentUser && (
+                          <span className="text-xs">Admin Delete</span>
+                        )}
                       </button>
                     </div>
                   )}
@@ -496,6 +572,7 @@ const ProductReview = ({
         onClose={closeDeleteModal}
         onConfirm={confirmDeleteReview}
         reviewId={reviewToDelete?.id}
+        isAdminDeleting={isAdminDeleting}
       />
     </div>
   );

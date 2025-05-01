@@ -16,7 +16,8 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [authUser, setAuthUser] = useState(null);
-  const [loadingAuth, setLoadingAuth] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true); // Firebase auth loading
+  const [userDataLoading, setUserDataLoading] = useState(false); // Firestore user data loading
   const [fromCart, setFromCart] = useState(false);
   const [cartMerged, setCartMerged] = useState(false);
 
@@ -30,8 +31,8 @@ export const AuthProvider = ({ children }) => {
     return userDoc?.exists() ? userDoc.data() : null;
   }, [userDoc]);
 
-  // Combined loading state
-  const loading = loadingAuth || (authUser && userDocLoading);
+  // Combined loading state - true when either auth or user data is loading
+  const loading = authLoading || (authUser && userDataLoading);
 
   // Handle merging localStorage cart to user's cart in Firebase
   const mergeLocalCartToUser = async (userId) => {
@@ -143,8 +144,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setAuthUser(user);
-      if (!user) {
-        setLoadingAuth(false);
+
+      if (user) {
+        // When we get a user, we're now waiting for Firestore data
+        setUserDataLoading(true);
+      } else {
+        // When no user, we're done with auth loading
+        setAuthLoading(false);
+        setUserDataLoading(false);
         setCartMerged(false); // Reset when user logs out
       }
     });
@@ -152,21 +159,24 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  // Update loading state when userDoc changes
+  // Update loading states when userDoc changes or loads
   useEffect(() => {
-    if (!authUser || userDocError) {
-      setLoadingAuth(false);
-    } else if (authUser && !userDocLoading) {
-      setLoadingAuth(false);
+    if (authUser) {
+      if (!userDocLoading) {
+        // User document has loaded (or failed), we're done with user data loading
+        setUserDataLoading(false);
+        setAuthLoading(false);
+      }
     }
-  }, [authUser, userDocLoading, userDocError]);
+  }, [authUser, userDocLoading]);
 
   // Handle errors from useDocument hook
   useEffect(() => {
     if (userDocError) {
       console.error("Error fetching user document:", userDocError);
       toast.error("Error loading user profile");
-      setLoadingAuth(false);
+      setUserDataLoading(false);
+      setAuthLoading(false);
     }
   }, [userDocError]);
 
@@ -186,12 +196,14 @@ export const AuthProvider = ({ children }) => {
       signInWithGoogle,
       logout,
       loading,
+      authLoading,
+      userDataLoading,
       fromCart,
       setFromCart,
       // Reset cart merge state for testing/debugging if needed
       resetCartMerge: () => setCartMerged(false),
     }),
-    [currentUser, authUser, loading, fromCart]
+    [currentUser, authUser, loading, authLoading, userDataLoading, fromCart]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

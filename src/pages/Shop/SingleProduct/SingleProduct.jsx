@@ -58,6 +58,7 @@ const SingleProduct = () => {
   const [artisanOpen, setArtisanOpen] = useState(false);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (product && product.exists()) {
       const productData = product.data();
 
