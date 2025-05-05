@@ -11,13 +11,13 @@ import {
   getDoc,
   getCountFromServer,
 } from "firebase/firestore";
-import { useCollection } from "react-firebase-hooks/firestore";
 import { db } from "../firebase/config";
 import { useFilterContext } from "../context/filter/filter_context";
 import ProductCard from "./ProductCard";
 import { FaThLarge, FaList } from "react-icons/fa";
 import Pagination from "./Pagination";
 import { useLocation } from "react-router-dom";
+import Empty_product from "./Empty_product";
 
 const AllProducts = () => {
   const {
@@ -902,11 +902,7 @@ const AllProducts = () => {
       ) : (
         <>
           {products.length === 0 ? (
-            <div className="rounded-lg bg-gray-50 p-12 text-center">
-              <h3 className="text-lg font-medium text-gray-700">
-                No products match your filters
-              </h3>
-            </div>
+            <Empty_product />
           ) : (
             <div
               className={

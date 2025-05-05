@@ -9,6 +9,7 @@ import {
   FiChevronRight,
 } from "react-icons/fi";
 import Loading from "../../components/Loading";
+import { Empty_order } from "../../components";
 
 const Orders = () => {
   const { orders, loading } = useOrders();
@@ -73,22 +74,7 @@ const Orders = () => {
       <h1 className="mb-6 text-2xl font-bold">My Orders</h1>
 
       {orders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
-          <div className="mb-4 h-16 w-16 rounded-full bg-gray-100 p-4">
-            <FiPackage className="h-full w-full text-gray-400" />
-          </div>
-          <h2 className="mb-2 text-xl font-semibold">No Orders Yet</h2>
-          <p className="mb-6 text-gray-600">
-            You haven't placed any orders yet. Start shopping to see your orders
-            here.
-          </p>
-          <Link
-            to="/shop"
-            className="hover:bg-primary-dark rounded bg-primary px-6 py-3 text-white transition-colors"
-          >
-            Browse Products
-          </Link>
-        </div>
+        <Empty_order />
       ) : (
         <div className="space-y-4">
           {orders.map((order) => (

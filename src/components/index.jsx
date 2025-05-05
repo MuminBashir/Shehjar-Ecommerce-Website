@@ -32,6 +32,8 @@ import NotFound from "./NotFound";
 import CartItems from "./CartItems";
 import Stars from "./Stars";
 import Sidebar_Filter from "./Sidebar_Filter";
+import Empty_product from "./Empty_product";
+import Empty_order from "./Empty_order";
 export {
   Sidebar_Filter,
   Stars,
@@ -67,4 +69,6 @@ export {
   Footer,
   Sidebar,
   Logo,
+  Empty_product,
+  Empty_order,
 };
