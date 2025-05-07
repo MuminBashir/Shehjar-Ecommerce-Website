@@ -372,19 +372,42 @@ const Checkout = () => {
               await updateProductInventory(checkoutItems);
 
               console.log("Inventory updated, now removing items from cart");
-
-              // Create an array of promises for removing each item
-              const removalPromises = checkoutItems.map((item) =>
-                removeFromCart(
-                  item.product_id,
-                  item.size,
-                  item.color,
-                  false // no toast for each removal
-                )
-              );
-
-              // Wait for all removals to complete
-              await Promise.all(removalPromises);
+              if (currentUser) {
+                // Remove from Firebase cart (for signed in user)
+                const userRef = doc(db, "users", currentUser.uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                  const userData = userSnap.data();
+                  const currentCart = userData.cart || [];
+                  const itemsToRemove = checkoutItems.map(
+                    (item) =>
+                      `${item.product_id}|||${item.size}|||${item.color}`
+                  );
+                  const updatedCart = currentCart.filter(
+                    (cartItem) =>
+                      !itemsToRemove.includes(
+                        `${cartItem.product_id}|||${cartItem.size}|||${cartItem.color}`
+                      )
+                  );
+                  await updateDoc(userRef, { cart: updatedCart });
+                }
+              } else {
+                // Remove from localStorage cart (for guest user)
+                const existingCart = JSON.parse(
+                  localStorage.getItem("cart") || "[]"
+                );
+                const itemsToRemove = checkoutItems.map(
+                  (item) => `${item.product_id}|||${item.size}|||${item.color}`
+                );
+                const updatedCart = existingCart.filter(
+                  (cartItem) =>
+                    !itemsToRemove.includes(
+                      `${cartItem.product_id}|||${cartItem.size}|||${cartItem.color}`
+                    )
+                );
+                localStorage.setItem("cart", JSON.stringify(updatedCart));
+                setCartItems(updatedCart);
+              }
 
               console.log("All items removed from cart successfully");
 
