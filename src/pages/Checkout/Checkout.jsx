@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCheckout } from "../../context/checkout/checkout_context";
 import { useAuth } from "../../context/auth/auth_context";
-import { useCart } from "../../context/cart/cart_context";
 import { toast } from "react-toastify";
 import { FiCheck, FiPlus } from "react-icons/fi";
 import AddressForm from "./_components/AddressForm";
@@ -34,7 +33,6 @@ const Checkout = () => {
     finalTotal,
   } = useCheckout();
   const { currentUser } = useAuth();
-  const { removeFromCart } = useCart();
 
   // States
   const [step, setStep] = useState(1);
