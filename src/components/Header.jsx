@@ -9,7 +9,7 @@ const Header = () => {
         <div className="space-y-4">
           <h1 className="text-4xl font-light capitalize leading-[1.2] md:text-5xl">
             {" "}
-            <span className=" font-medium ">Shoptik</span> Number #1Trusted
+            <span className=" font-medium ">Shehjar</span> Number #1Trusted
             furniture website.{" "}
           </h1>
           <p className="font-medium text-orange-400">

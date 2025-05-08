@@ -10,6 +10,7 @@ import { AddToCart } from "../../../components";
 import { Rating } from "react-simple-star-rating";
 import { IndianRupee, ChevronDown, ChevronUp } from "lucide-react";
 import GenreList from "../../../components/GenreList";
+import { FiExternalLink } from "react-icons/fi";
 
 // GI Certified Seal Component
 const GICertifiedSeal = () => (
@@ -302,7 +303,7 @@ const SingleProduct = () => {
           )}
 
           {/* Collapsible Product Description */}
-          <div className="mt-8 border-t border-gray-200 pt-4">
+          <div className="mt-4 border-t border-gray-200 pt-4">
             <button
               className="flex w-full items-center justify-between py-2"
               onClick={() => setDescriptionOpen(!descriptionOpen)}
@@ -336,21 +337,65 @@ const SingleProduct = () => {
               )}
             </button>
             {shippingOpen && (
-              <div className="mt-2 space-y-2 text-gray-700">
+              <div className="mt-2 space-y-4 text-gray-700">
                 {productData.returnPolicy && (
-                  <div className="mt-4">
-                    <h4 className="font-medium underline">
-                      {productData.returnPolicy}
-                    </h4>
+                  <div>
+                    <h4 className="mb-2 font-medium">Return Policy:</h4>
+                    <p className="mb-2 text-sm">{productData.returnPolicy}</p>
+                    <p className="mb-3 text-sm">
+                      Returns and exchanges are accepted within{" "}
+                      <span className="font-medium">3 days</span> of delivery.
+                      <Link
+                        to="/refund-policy"
+                        className="ml-1 text-primary hover:underline"
+                      >
+                        View our complete return policy
+                      </Link>
+                    </p>
                   </div>
                 )}
-                <h4 className="font-medium">Shipping Policy:</h4>
-                <ul className="list-disc space-y-1 pl-5">
-                  <li>Free shipping on orders above ₹1000</li>
-                  <li>Delivery within 5-7 business days</li>
-                  <li>Express shipping available at checkout</li>
-                  <li>International shipping available to select countries</li>
-                </ul>
+
+                <div>
+                  <h4 className="mb-2 font-medium">Shipping Information:</h4>
+                  <ul className="list-disc space-y-2 pl-5 text-sm">
+                    <li>
+                      <span className="font-medium">Processing time:</span> 3-7
+                      business days as our products are handmade
+                    </li>
+                    <li>
+                      <span className="font-medium">Domestic delivery:</span>{" "}
+                      5-10 business days after dispatch
+                    </li>
+                    <li>
+                      <span className="font-medium">Free shipping</span> on
+                      domestic orders above a certain amount (see shipping
+                      policy)
+                    </li>
+                    <li>
+                      <span className="font-medium">
+                        International shipping
+                      </span>{" "}
+                      available with longer delivery times (10-20 business days)
+                    </li>
+                    <li>
+                      You'll receive{" "}
+                      <span className="font-medium">tracking information</span>{" "}
+                      via email once your order ships
+                    </li>
+                  </ul>
+
+                  <div className="mt-4 rounded-md bg-gray-50 p-3">
+                    <div className="flex items-center">
+                      <Link
+                        to="/shipping-policy"
+                        className="flex items-center font-medium text-primary hover:underline"
+                      >
+                        View our complete shipping policy
+                        <FiExternalLink className="ml-1" size={14} />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>

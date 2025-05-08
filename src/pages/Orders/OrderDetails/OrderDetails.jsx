@@ -9,6 +9,10 @@ import {
   FiHome,
   FiXCircle,
   FiExternalLink,
+  FiMail,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiClock,
 } from "react-icons/fi";
 import { Loading } from "../../../components";
 
@@ -17,6 +21,17 @@ const OrderDetailsPage = () => {
   const { orders, loading, getOrderById } = useOrders();
   const [order, setOrder] = useState(null);
   const [orderLoading, setOrderLoading] = useState(true);
+
+  // Calculate if the order is within 24 hours for cancellation eligibility
+  const isWithin24Hours = (timestamp) => {
+    if (!timestamp) return false;
+    const orderDate = timestamp.toDate
+      ? timestamp.toDate()
+      : new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now - orderDate) / (1000 * 60 * 60);
+    return diffInHours <= 12;
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -86,6 +101,11 @@ const OrderDetailsPage = () => {
       </div>
     );
   }
+
+  // Calculate if order can be cancelled (within 12 hours and status is "processing")
+  const canBeCancelled =
+    isWithin24Hours(order.createdAt) &&
+    order.status.toLowerCase() === "processing";
 
   return (
     <div className="container mx-auto mt-20 max-w-screen-xl px-4 py-8">
@@ -389,6 +409,133 @@ const OrderDetailsPage = () => {
               </div>
             </div>
           </div>
+
+          {/* NEW SECTION: Cancellation and Return Information */}
+          <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="bg-gray-50 px-6 py-4">
+              <h2 className="font-semibold">Help with Your Order</h2>
+            </div>
+            <div className="p-6">
+              {/* Cancellation Information */}
+              <div className="mb-6">
+                <div className="flex items-start">
+                  <div className="mt-1 mr-3 flex-shrink-0">
+                    <FiClock className="text-primary" size={20} />
+                  </div>
+                  <div>
+                    <h3 className="mb-1 text-lg font-medium">
+                      Order Cancellation
+                    </h3>
+                    {canBeCancelled ? (
+                      <div className="mb-3 rounded-md bg-green-50 p-3">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <FiCheckCircle className="h-5 w-5 text-green-600" />
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm font-medium text-green-800">
+                              Your order is eligible for cancellation
+                            </p>
+                            <p className="mt-1 text-sm text-green-700">
+                              You can cancel this order within 12 hours of
+                              placing it (until{" "}
+                              {formatDate(
+                                new Date(
+                                  order.createdAt.toDate
+                                    ? order.createdAt.toDate().getTime() +
+                                      12 * 60 * 60 * 1000
+                                    : new Date(order.createdAt).getTime() +
+                                      12 * 60 * 60 * 1000
+                                )
+                              )}
+                              ).
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-3 rounded-md bg-gray-50 p-3">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <FiAlertCircle className="h-5 w-5 text-gray-600" />
+                          </div>
+                          <div className="ml-3">
+                            <p className="text-sm font-medium text-gray-800">
+                              {order.status.toLowerCase() === "cancelled"
+                                ? "This order has already been cancelled."
+                                : ["shipped", "delivered"].includes(
+                                    order.status.toLowerCase()
+                                  )
+                                ? "This order cannot be cancelled as it has already been shipped."
+                                : "This order is no longer eligible for cancellation (12-hour window has passed)."}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <p className="mb-3 text-sm text-gray-600">
+                      To cancel your order, please contact us through one of the
+                      following methods:
+                    </p>
+                    <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                      <a
+                        href="mailto:info@shehjar.co.in"
+                        className="flex items-center rounded-md border border-gray-300 px-4 py-3 text-sm hover:bg-gray-50"
+                      >
+                        <FiMail className="mr-2 text-primary" />
+                        <span>Email us at info@shehjar.co.in</span>
+                      </a>
+                      <Link
+                        to="/contact"
+                        className="flex items-center rounded-md border border-gray-300 px-4 py-3 text-sm hover:bg-gray-50"
+                      >
+                        <FiExternalLink className="mr-2 text-primary" />
+                        <span>Contact us through our form</span>
+                      </Link>
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      <strong>Note:</strong> Cancellation is only possible
+                      within 12 hours of placing the order and only if the order
+                      hasn't been shipped yet.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Return/Exchange Information */}
+              <div>
+                <div className="flex items-start">
+                  <div className="mt-1 mr-3 flex-shrink-0">
+                    <FiRefreshCw className="text-primary" size={20} />
+                  </div>
+                  <div>
+                    <h3 className="mb-1 text-lg font-medium">
+                      Returns & Exchanges
+                    </h3>
+                    <p className="mb-3 text-sm text-gray-600">
+                      Shehjar offers returns and exchanges on most items within
+                      3 days of delivery. For detailed information about our
+                      policy, processing times, and eligibility criteria:
+                    </p>
+                    <Link
+                      to="/refund-policy"
+                      className="mb-4 inline-flex items-center rounded-md border border-primary bg-white px-4 py-2 text-sm font-medium text-primary hover:bg-primary hover:text-white"
+                    >
+                      View Our Return/Refund Policy{" "}
+                      <FiExternalLink className="ml-2" />
+                    </Link>
+                    <p className="text-xs text-gray-500">
+                      <strong>Note:</strong> Please contact us at
+                      info@shehjar.co.in with your order details if you'd like
+                      to initiate a return or exchange. Handcrafted items may
+                      have specific return conditions, so please check our
+                      policy for details.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Order Summary - Right Column */}
@@ -431,7 +578,13 @@ const OrderDetailsPage = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Delivery Fee</span>
-                    <span>₹{order.deliveryCost.toLocaleString()}</span>
+                    <span>
+                      {order.isFreeDelivery ? (
+                        <span className="text-green-600">Free</span>
+                      ) : (
+                        `₹${order.deliveryCost.toLocaleString()}`
+                      )}
+                    </span>
                   </div>
                   {order.discount > 0 && (
                     <div className="flex justify-between text-green-600">
@@ -445,6 +598,31 @@ const OrderDetailsPage = () => {
                       <span>₹{order.total.toLocaleString()}</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="mt-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+              <div className="bg-gray-50 px-6 py-4">
+                <h2 className="font-semibold">Need Help?</h2>
+              </div>
+              <div className="p-6">
+                <div className="flex flex-col space-y-3">
+                  <a
+                    href="mailto:info@shehjar.co.in"
+                    className="flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    <FiMail className="mr-2 text-primary" />
+                    Email Customer Service
+                  </a>
+                  <Link
+                    to="/contact"
+                    className="flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    <FiExternalLink className="mr-2 text-primary" />
+                    Contact Us Form
+                  </Link>
                 </div>
               </div>
             </div>

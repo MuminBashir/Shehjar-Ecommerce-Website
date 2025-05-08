@@ -22,7 +22,7 @@ const Footer = () => {
   return (
     <>
       <footer className="container mx-auto mt-28 grid grid-cols-1 space-y-10 bg-primary px-5 py-8 tracking-wider text-white md:mt-28 md:grid-cols-4 md:space-y-0 xl:px-28 xl:py-20 ">
-        {/* Shoptik */}
+        {/* Shehjar */}
         <section className="space-y-4">
           <h1 className="text-4xl font-black tracking-wider">Shehjar.</h1>
           <p className="w-2/3 text-sm font-light">
@@ -32,7 +32,7 @@ const Footer = () => {
         </section>
 
         {/* Contact us */}
-        <section className="space-y-6">
+        <section className="mr-5 space-y-6">
           <div className="space-y-1">
             <h2 className="uppercase ">Contact us</h2>
             <div className="w-1/6 border-t"></div>
@@ -43,7 +43,7 @@ const Footer = () => {
                 {" "}
                 <BsTelephone />{" "}
               </span>
-              <span> (+88) 1234 567898</span>
+              <span> (+91) 7889-771-848</span>
             </p>
             <p className="flex items-center space-x-1">
               <span>
@@ -57,7 +57,10 @@ const Footer = () => {
                 {" "}
                 <BsBuilding />{" "}
               </span>
-              <span> Srinagar, Kashmir 190001</span>
+              <span>
+                Shehjar Complex Inderhama, Burzahama, Srinagar, Jammu & Kashmir
+                - 190006
+              </span>
             </p>
             <div className="flex space-x-6">
               <a href="#" aria-label="Facebook">
@@ -83,21 +86,24 @@ const Footer = () => {
             <div className="w-1/6 border-t"></div>
           </div>
           <div className="flex flex-col space-y-4 text-sm font-light">
-            <a href="/about" className="hover:text-white/80">
+            <Link to="/about" className="hover:text-white/80">
               About Shehjar
-            </a>
-            <a href="/contact" className="hover:text-white/80">
+            </Link>
+            <Link to="/contact" className="hover:text-white/80">
               Contact us
-            </a>
-            <a href="/terms-and-conditions" className="hover:text-white/80">
+            </Link>
+            <Link to="/terms-and-conditions" className="hover:text-white/80">
               Terms and Conditions
-            </a>
-            <a href="/privacy-policy" className="hover:text-white/80">
+            </Link>
+            <Link to="/privacy-policy" className="hover:text-white/80">
               Privacy Policy
-            </a>
-            <a href="/shipping-policy" className="hover:text-white/80">
-              Shipping and Return Policy
-            </a>
+            </Link>
+            <Link to="/shipping-policy" className="hover:text-white/80">
+              Shipping Policy
+            </Link>
+            <Link to="/refund-policy" className="hover:text-white/80">
+              Return & Refund Policy
+            </Link>
           </div>
         </section>
 

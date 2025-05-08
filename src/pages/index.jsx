@@ -16,6 +16,12 @@ import SingleArtisanPage from "./Artisans/SingleArtisan/SingleArtisan";
 import SalePage from "./Sale/Sale";
 import Orders from "./Orders/Orders";
 import OrderDetails from "./Orders/OrderDetails/OrderDetails";
+import About from "./About/About";
+import Contact from "./Contact/Contact";
+import TermsAndConditions from "./TermsAndConditions/TermsAndConditions";
+import PrivacyPolicy from "./PrivacyPolicy/PrivacyPolicy";
+import ShippingPolicy from "./ShippingPolicy/ShippingPolicy";
+import RefundPolicy from "./RefundPolicy/RefundPolicy";
 
 export {
   Features,
@@ -36,4 +42,10 @@ export {
   SalePage,
   Orders,
   OrderDetails,
+  About,
+  Contact,
+  TermsAndConditions,
+  PrivacyPolicy,
+  ShippingPolicy,
+  RefundPolicy,
 };

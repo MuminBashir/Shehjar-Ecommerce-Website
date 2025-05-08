@@ -28,6 +28,12 @@ import {
   SalePage,
   Orders,
   OrderDetails,
+  About,
+  Contact,
+  TermsAndConditions,
+  PrivacyPolicy,
+  ShippingPolicy,
+  RefundPolicy,
 } from "./pages";
 import { measurementID } from "./utils/constants";
 import { useAuth } from "./context/auth/auth_context";
@@ -88,6 +94,12 @@ function AppContent() {
         <Route path="/features" element={<Features />} />
         <Route path="/services" element={<Services />} />
         <Route path="/news" element={<News />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!hideLayout && <Footer />}

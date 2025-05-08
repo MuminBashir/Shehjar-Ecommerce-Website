@@ -19,7 +19,13 @@ export function CheckoutProvider({ children }) {
   const [deliveryRates, setDeliveryRates] = useState({
     indian_delivery_cost: 0,
     international_delivery_cost: 0,
+    free_indian_delivery: 0,
+    free_international_delivery: 0,
   });
+  const [isFreeDelivery, setIsFreeDelivery] = useState(false);
+  const [amountAwayFromFreeDelivery, setAmountAwayFromFreeDelivery] =
+    useState(0);
+  const [freeDeliveryEligible, setFreeDeliveryEligible] = useState(false);
 
   const { currentSale, hasActiveSale } = useSale();
 
@@ -36,6 +42,8 @@ export function CheckoutProvider({ children }) {
           setDeliveryRates({
             indian_delivery_cost: data.indian_delivery_cost || 0,
             international_delivery_cost: data.international_delivery_cost || 0,
+            free_indian_delivery: data.free_indian_delivery || 0,
+            free_international_delivery: data.free_international_delivery || 0,
           });
         }
       } catch (error) {
@@ -79,28 +87,63 @@ export function CheckoutProvider({ children }) {
     console.log("Checkout items updated:", checkoutItems);
   }, [checkoutItems]);
 
-  // Update delivery cost when delivery address changes
+  // Check for free delivery and update delivery cost when address changes or discounted total changes
   useEffect(() => {
     if (!deliveryAddress) {
       setDeliveryCost(0);
+      setIsFreeDelivery(false);
+      setAmountAwayFromFreeDelivery(0);
+      setFreeDeliveryEligible(false);
       return;
     }
 
     // Check if the delivery address is in India
     const isIndianAddress = deliveryAddress.country === "IN";
 
-    // Set delivery cost based on address location
-    const cost = isIndianAddress
-      ? deliveryRates.indian_delivery_cost
-      : deliveryRates.international_delivery_cost;
+    // Get appropriate threshold for free delivery based on address location
+    const freeDeliveryThreshold = isIndianAddress
+      ? deliveryRates.free_indian_delivery
+      : deliveryRates.free_international_delivery;
 
-    setDeliveryCost(cost);
-    console.log(
-      `Delivery cost set to ${cost} (${
-        isIndianAddress ? "Indian" : "International"
-      })`
-    );
-  }, [deliveryAddress, deliveryRates]);
+    // Check if free delivery is available for this location
+    setFreeDeliveryEligible(freeDeliveryThreshold > 0);
+
+    // Check if the order qualifies for free delivery
+    const qualifiesForFreeDelivery =
+      freeDeliveryThreshold > 0 && discountedTotal >= freeDeliveryThreshold;
+
+    // Calculate how much more they need to spend for free delivery
+    if (freeDeliveryThreshold > 0 && discountedTotal < freeDeliveryThreshold) {
+      const amountAway = freeDeliveryThreshold - discountedTotal;
+      setAmountAwayFromFreeDelivery(amountAway);
+    } else {
+      setAmountAwayFromFreeDelivery(0);
+    }
+
+    setIsFreeDelivery(qualifiesForFreeDelivery);
+
+    // Set delivery cost based on whether free delivery applies
+    if (qualifiesForFreeDelivery) {
+      setDeliveryCost(0);
+      console.log(
+        `Free delivery applied (${
+          isIndianAddress ? "Indian" : "International"
+        })`
+      );
+    } else {
+      // Standard delivery cost
+      const cost = isIndianAddress
+        ? deliveryRates.indian_delivery_cost
+        : deliveryRates.international_delivery_cost;
+
+      setDeliveryCost(cost);
+      console.log(
+        `Delivery cost set to ${cost} (${
+          isIndianAddress ? "Indian" : "International"
+        })`
+      );
+    }
+  }, [deliveryAddress, deliveryRates, discountedTotal]);
 
   // Function to set delivery address
   const updateDeliveryAddress = (address) => {
@@ -151,6 +194,9 @@ export function CheckoutProvider({ children }) {
     setTotalSavings(0);
     setDeliveryAddress(null);
     setDeliveryCost(0);
+    setIsFreeDelivery(false);
+    setAmountAwayFromFreeDelivery(0);
+    setFreeDeliveryEligible(false);
   };
 
   // Calculate the final total (discounted items + delivery cost)
@@ -165,6 +211,9 @@ export function CheckoutProvider({ children }) {
     hasDiscount: totalSavings > 0,
     deliveryAddress,
     deliveryCost,
+    isFreeDelivery,
+    amountAwayFromFreeDelivery,
+    freeDeliveryEligible,
     finalTotal,
     addItemsToCheckout,
     clearCheckout,

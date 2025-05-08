@@ -31,6 +31,9 @@ const Checkout = () => {
     totalSavings,
     deliveryCost,
     finalTotal,
+    isFreeDelivery,
+    amountAwayFromFreeDelivery,
+    freeDeliveryEligible,
   } = useCheckout();
   const { currentUser } = useAuth();
 
@@ -243,6 +246,7 @@ const Checkout = () => {
         subtotal,
         discount: totalSavings,
         deliveryCost,
+        isFreeDelivery,
         total: finalTotal,
         status: "processing",
         createdAt: serverTimestamp(),
@@ -664,8 +668,25 @@ const Checkout = () => {
                   )}
                   <div className="flex justify-between text-sm">
                     <p>Delivery</p>
-                    <p>₹{deliveryCost}</p>
+                    {isFreeDelivery ? (
+                      <p className="text-green-600">Free</p>
+                    ) : (
+                      <p>₹{deliveryCost}</p>
+                    )}
                   </div>
+                  {isFreeDelivery && (
+                    <div className="text-xs italic text-green-600">
+                      Free delivery applied to your order!
+                    </div>
+                  )}
+                  {!isFreeDelivery &&
+                    freeDeliveryEligible &&
+                    amountAwayFromFreeDelivery > 0 && (
+                      <div className="text-xs italic text-gray-500">
+                        Add ₹{amountAwayFromFreeDelivery.toLocaleString()} more
+                        to qualify for free delivery!
+                      </div>
+                    )}
                   <div className="border-t border-gray-200 pt-2"></div>
                   <div className="flex justify-between font-semibold">
                     <p>Total</p>
