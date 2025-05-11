@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useSale } from "../sale/sale_context";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc } from "firebase/firestore";
+import { useDocument } from "react-firebase-hooks/firestore";
 
 const CheckoutContext = createContext();
 
@@ -21,6 +22,7 @@ export function CheckoutProvider({ children }) {
     international_delivery_cost: 0,
     free_indian_delivery: 0,
     free_international_delivery: 0,
+    allow_orders: true,
   });
   const [isFreeDelivery, setIsFreeDelivery] = useState(false);
   const [amountAwayFromFreeDelivery, setAmountAwayFromFreeDelivery] =
@@ -28,31 +30,24 @@ export function CheckoutProvider({ children }) {
   const [freeDeliveryEligible, setFreeDeliveryEligible] = useState(false);
 
   const { currentSale, hasActiveSale } = useSale();
+  const db = getFirestore();
+  const [deliveryDoc, deliveryLoading] = useDocument(
+    doc(db, "delivery", "current_delivery")
+  );
 
-  // Fetch delivery costs from Firebase on component mount
+  // Update delivery rates when document changes
   useEffect(() => {
-    const fetchDeliveryRates = async () => {
-      try {
-        const db = getFirestore();
-        const deliveryDocRef = doc(db, "delivery", "current_delivery");
-        const deliveryDocSnap = await getDoc(deliveryDocRef);
-
-        if (deliveryDocSnap.exists()) {
-          const data = deliveryDocSnap.data();
-          setDeliveryRates({
-            indian_delivery_cost: data.indian_delivery_cost || 0,
-            international_delivery_cost: data.international_delivery_cost || 0,
-            free_indian_delivery: data.free_indian_delivery || 0,
-            free_international_delivery: data.free_international_delivery || 0,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching delivery rates:", error);
-      }
-    };
-
-    fetchDeliveryRates();
-  }, []);
+    if (deliveryDoc?.exists()) {
+      const data = deliveryDoc.data();
+      setDeliveryRates({
+        indian_delivery_cost: data.indian_delivery_cost || 0,
+        international_delivery_cost: data.international_delivery_cost || 0,
+        free_indian_delivery: data.free_indian_delivery || 0,
+        free_international_delivery: data.free_international_delivery || 0,
+        allow_orders: data.allow_orders ?? true,
+      });
+    }
+  }, [deliveryDoc]);
 
   // Calculate totals whenever checkout items or delivery cost change
   useEffect(() => {
@@ -218,6 +213,7 @@ export function CheckoutProvider({ children }) {
     addItemsToCheckout,
     clearCheckout,
     updateDeliveryAddress,
+    allowOrders: deliveryRates.allow_orders,
   };
 
   return (

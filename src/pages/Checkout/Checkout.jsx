@@ -34,6 +34,7 @@ const Checkout = () => {
     isFreeDelivery,
     amountAwayFromFreeDelivery,
     freeDeliveryEligible,
+    allowOrders,
   } = useCheckout();
   const { currentUser } = useAuth();
 
@@ -285,6 +286,14 @@ const Checkout = () => {
         return;
       }
 
+      if (!allowOrders) {
+        toast.error(
+          "Orders are currently not being accepted. Please try again later."
+        );
+        setPaymentLoading(false);
+        return;
+      }
+
       // Create order on your server and get Razorpay order ID
       const response = await fetch(
         `${API_BASE_URL}/api/create-razorpay-order`,
@@ -415,6 +424,19 @@ const Checkout = () => {
 
               toast.success("Payment successful! Order has been placed.");
               navigate(`/order-success/${orderId}`);
+              try {
+                await fetch(`${API_BASE_URL}/api/order-notifications`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    orderId: orderId,
+                    notificationType: "order-confirmation",
+                  }),
+                });
+              } catch (e) {
+                // Notification failure is non-blocking for now
+                console.error("Failed to send order notification", e);
+              }
             } else {
               throw new Error("Payment verification failed");
             }
