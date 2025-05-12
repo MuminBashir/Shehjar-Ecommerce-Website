@@ -63,17 +63,33 @@ const Footer = () => {
               </span>
             </p>
             <div className="flex space-x-6">
-              <a href="#" aria-label="Facebook">
+              <a
+                href="https://www.facebook.com/profile.php?id=100063831594270&sk=reels_tab"
+                aria-label="Facebook"
+                target="__blank"
+              >
                 <AiOutlineFacebook className="h-5 w-5" />
               </a>
-              <a href="#" aria-label="Twitter">
+              <a
+                href="https://www.instagram.com/shehjar97/"
+                aria-label="Instagram"
+                target="__blank"
+              >
+                <AiOutlineInstagram className="h-5 w-5" />
+              </a>
+              <a
+                href="https://www.linkedin.com/company/shehjar/posts/?feedView=all"
+                aria-label="Twitter"
+                target="__blank"
+              >
                 <AiFillTwitterSquare className="h-5 w-5" />
               </a>
-              <a href="#" aria-label="LinkedIn">
+              <a
+                href="https://www.linkedin.com/company/shehjar/posts/?feedView=all"
+                aria-label="LinkedIn"
+                target="__blank"
+              >
                 <AiOutlineLinkedin className="h-5 w-5" />
-              </a>
-              <a href="#" aria-label="Instagram">
-                <AiOutlineInstagram className="h-5 w-5" />
               </a>
             </div>
           </div>

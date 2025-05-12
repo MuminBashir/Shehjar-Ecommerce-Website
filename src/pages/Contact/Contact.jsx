@@ -171,32 +171,36 @@ const Contact = () => {
               <h3 className="mb-4 font-medium">Follow Us</h3>
               <div className="flex space-x-4">
                 <a
-                  href="#"
+                  href="https://www.facebook.com/profile.php?id=100063831594270&sk=reels_tab"
                   aria-label="Facebook"
+                  target="__blank"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-white"
                 >
                   <AiOutlineFacebook className="h-5 w-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://www.instagram.com/shehjar97/"
+                  aria-label="Instagram"
+                  target="__blank"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-white"
+                >
+                  <AiOutlineInstagram className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://www.linkedin.com/company/shehjar/posts/?feedView=all"
                   aria-label="Twitter"
+                  target="__blank"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-white"
                 >
                   <AiFillTwitterSquare className="h-5 w-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://www.linkedin.com/company/shehjar/posts/?feedView=all"
                   aria-label="LinkedIn"
+                  target="__blank"
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-white"
                 >
                   <AiOutlineLinkedin className="h-5 w-5" />
-                </a>
-                <a
-                  href="#"
-                  aria-label="Instagram"
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-white"
-                >
-                  <AiOutlineInstagram className="h-5 w-5" />
                 </a>
               </div>
             </div>

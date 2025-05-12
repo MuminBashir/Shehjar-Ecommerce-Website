@@ -145,7 +145,7 @@ const ProductCard = ({ product, listView }) => {
             </div>
 
             {defaultCombination ? (
-              <div className="mt-2 w-max">
+              <div className={`mt-2 ${listView ? "w-full" : "w-max"}`}>
                 <AddToCart
                   productId={id}
                   selectedSize={defaultSize}

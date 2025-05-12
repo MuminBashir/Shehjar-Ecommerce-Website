@@ -58,7 +58,7 @@ const Login = () => {
         <h1 className="mb-4 text-4xl font-bold text-white">Shehjar</h1>
         <p className="mb-8 text-white">
           One stop destination for all your artistic needs. Explore a wide range
-          of products and services tailored just for you.
+          of products, handcrafted by talented artisans from Kashmir.
         </p>
       </div>
 
