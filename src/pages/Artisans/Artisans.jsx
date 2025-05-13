@@ -13,6 +13,7 @@ import ArtisanCard from "../../components/ArtisansCard";
 import Pagination from "../../components/Pagination";
 import { Loader } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Breadcrumb } from "../../components";
 
 const ArtisansPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -170,78 +171,81 @@ const ArtisansPage = () => {
   const displayData = pageSnapshots[currentPage] || value;
 
   return (
-    <motion.div
-      className="container mx-auto px-4 py-24"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <motion.h1
-        className="mb-8 text-center text-4xl font-bold"
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
+    <div className="pt-24 md:pt-20">
+      <Breadcrumb title={"Artisans"} />
+      <motion.div
+        className="container mx-auto px-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
       >
-        Our Artisans
-      </motion.h1>
+        <motion.h1
+          className="mb-8 text-center text-4xl font-bold"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          Our Artisans
+        </motion.h1>
 
-      <motion.p
-        className="mx-auto mb-12 max-w-2xl text-center text-lg text-gray-600"
-        initial={{ y: -15, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-      >
-        Discover the talented artisans behind our unique products. Each artisan
-        brings their own story, skill, and passion to create wonderful handmade
-        items.
-      </motion.p>
+        <motion.p
+          className="mx-auto mb-12 max-w-2xl text-center text-lg text-gray-600"
+          initial={{ y: -15, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+        >
+          Discover the talented artisans behind our unique products. Each
+          artisan brings their own story, skill, and passion to create wonderful
+          handmade items.
+        </motion.p>
 
-      <AnimatePresence mode="wait">
-        <motion.div key={currentPage} {...pageTransition}>
-          {displayData && displayData.docs.length > 0 ? (
-            <>
+        <AnimatePresence mode="wait">
+          <motion.div key={currentPage} {...pageTransition}>
+            {displayData && displayData.docs.length > 0 ? (
+              <>
+                <motion.div
+                  className="mb-12 grid grid-cols-1 gap-8"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {displayData.docs.map((doc, index) => (
+                    <motion.div
+                      key={doc.id}
+                      variants={itemVariants}
+                      custom={index}
+                    >
+                      <ArtisanCard id={doc.id} artisan={doc.data()} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.5 }}
+                >
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </motion.div>
+              </>
+            ) : (
               <motion.div
-                className="mb-12 grid grid-cols-1 gap-8"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {displayData.docs.map((doc, index) => (
-                  <motion.div
-                    key={doc.id}
-                    variants={itemVariants}
-                    custom={index}
-                  >
-                    <ArtisanCard id={doc.id} artisan={doc.data()} />
-                  </motion.div>
-                ))}
-              </motion.div>
-
-              <motion.div
+                className="py-16 text-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.6, duration: 0.5 }}
+                transition={{ duration: 0.5 }}
               >
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
+                <p className="text-xl text-gray-500">No artisans found.</p>
               </motion.div>
-            </>
-          ) : (
-            <motion.div
-              className="py-16 text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <p className="text-xl text-gray-500">No artisans found.</p>
-            </motion.div>
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </motion.div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </motion.div>
+    </div>
   );
 };
 

@@ -104,16 +104,20 @@ const SingleProduct = () => {
   };
 
   if (loading)
-    return <div className="py-24 text-center">Loading product details...</div>;
+    return (
+      <div className="py-36 text-center md:py-32">
+        Loading product details...
+      </div>
+    );
   if (error)
     return (
-      <div className="py-24 text-center text-red-500">
+      <div className="py-36 text-center text-red-500 md:py-32">
         Error loading product: {error.message}
       </div>
     );
   if (!product || !product.exists())
     return (
-      <div className="py-24 text-center">
+      <div className="py-36 text-center md:py-32">
         <div className="text-2xl font-bold">Product not found.</div>
         <div className="mt-3 mb-5">
           The product you're looking for doesn't exist or has been removed
@@ -155,7 +159,7 @@ const SingleProduct = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 pt-24">
+    <div className="container mx-auto px-4 pt-36 md:pt-32">
       <div className="flex flex-col gap-8 md:flex-row">
         {/* Product Images */}
         <div className="md:w-1/2">

@@ -55,10 +55,13 @@ const Login = () => {
     <div className="flex h-screen">
       {/* Left side - Image and text */}
       <div className="hidden flex-col justify-center bg-gradient-to-br from-primary to-primary p-12 md:flex md:w-1/2">
-        <h1 className="mb-4 text-4xl font-bold text-white">Shehjar</h1>
+        <h1 className="mb-4 font-serif text-2xl font-bold text-white">
+          S H E H J A R.
+        </h1>
         <p className="mb-8 text-white">
-          One stop destination for all your artistic needs. Explore a wide range
-          of products, handcrafted by talented artisans from Kashmir.
+          We weave dignity into every thread, carve pride into every motif, and
+          connect you with the soul of Kashmir — one handcrafted piece at a
+          time.
         </p>
       </div>
 
@@ -68,7 +71,7 @@ const Login = () => {
           <div className="mb-8 text-center">
             <div className="mb-4 flex justify-center">
               <div className="flex items-center justify-center">
-                <img src={shehjarlogo} alt="Shehjar" width={120} height={120} />
+                <img src={shehjarlogo} alt="Shehjar" width={200} height={200} />
               </div>
             </div>
             <h2 className="text-2xl font-bold">Welcome To Shehjar</h2>

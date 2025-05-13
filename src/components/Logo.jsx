@@ -11,7 +11,7 @@ const Logo = ({ className }) => {
         <img
           src={shehjarlogo}
           alt="Shehjar"
-          className="w-[80px] md:w-[120px]"
+          className="w-[120px] md:w-[150px]"
         />
       </h1>
     </Link>

@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const Empty_cart = () => {
   return (
-    <section className="my-24 grid place-items-center  ">
+    <section className="mt-32 grid place-items-center md:mt-28  ">
       <img src={Empty_Cart_Image} alt="" className=" w-72  " />
       <div className=" my-10 flex flex-col items-center justify-center ">
         <h3 className=" text-2xl font-medium "> Your cart is empty. </h3>

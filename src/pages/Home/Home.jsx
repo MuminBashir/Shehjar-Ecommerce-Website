@@ -19,7 +19,7 @@ const ProductCategory = lazy(() => import("../../components/ProductCategory"));
 
 const Home = () => {
   return (
-    <div className="mt-20">
+    <div className="mt-32 md:mt-28">
       <Suspense fallback={<Loading />}>
         <div className="hidden md:block">
           <Carousel isMobile={false} />

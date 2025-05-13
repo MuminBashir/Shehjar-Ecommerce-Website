@@ -211,7 +211,7 @@ const Cart = () => {
   const allSelected = Object.values(selectedItems).every(Boolean);
 
   return (
-    <div className="container mx-auto mt-20 px-4 py-8">
+    <div className="container mx-auto mt-32 px-4 py-8 md:mt-28">
       <h1 className="mb-6 text-2xl font-bold">Your Shopping Cart</h1>
 
       {hasActiveSale && totalSavings > 0 && someSelected && (

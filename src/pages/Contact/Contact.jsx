@@ -87,7 +87,7 @@ const Contact = () => {
   }, []);
 
   return (
-    <div className="mt-20">
+    <div className="mt-32 md:mt-28">
       <Breadcrumb title="Contact Us" />
       <div className="container mx-auto px-5 py-10 xl:px-28">
         <motion.div

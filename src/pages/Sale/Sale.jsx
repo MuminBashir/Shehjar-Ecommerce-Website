@@ -88,7 +88,7 @@ const SalePage = () => {
 
   if (saleLoading || loading) {
     return (
-      <div className="mt-20 flex h-96 items-center justify-center">
+      <div className="mt-32 flex h-96 items-center justify-center md:mt-28">
         <div className="text-xl">Loading sale...</div>
       </div>
     );
@@ -96,7 +96,7 @@ const SalePage = () => {
 
   if (!hasActiveSale || !currentSale) {
     return (
-      <div className="container mx-auto mt-20 px-4 py-8">
+      <div className="container mx-auto mt-32 px-4 py-8 md:mt-28">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <h1 className="mb-4 text-2xl font-bold">No Active Sale</h1>
           <p className="mb-6 text-gray-600">
@@ -114,7 +114,7 @@ const SalePage = () => {
   }
 
   return (
-    <div className="container mx-auto mt-20 px-4 py-8">
+    <div className="container mx-auto mt-32 px-4 py-8 md:mt-28">
       {/* Sale Banner - Modified to prevent image cutting */}
       <div className="relative mb-8 overflow-hidden rounded-lg">
         {currentSale.thumbnail_image ? (

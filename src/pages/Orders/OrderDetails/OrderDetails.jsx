@@ -81,7 +81,7 @@ const OrderDetailsPage = () => {
 
   if (loading || orderLoading) {
     return (
-      <div className="container mx-auto mt-20 flex justify-center px-4 py-16">
+      <div className="container mx-auto mt-32 flex justify-center px-4 py-16 md:mt-28">
         <Loading />
       </div>
     );
@@ -89,7 +89,7 @@ const OrderDetailsPage = () => {
 
   if (!order) {
     return (
-      <div className="container mx-auto mt-20 max-w-screen-xl px-4 py-16 text-center">
+      <div className="container mx-auto mt-32 max-w-screen-xl px-4 py-16 text-center md:mt-28">
         <h1 className="mb-4 text-2xl font-bold">Order Not Found</h1>
         <p className="mb-8">We couldn't find the order you're looking for.</p>
         <Link
@@ -108,7 +108,7 @@ const OrderDetailsPage = () => {
     order.status.toLowerCase() === "processing";
 
   return (
-    <div className="container mx-auto mt-20 max-w-screen-xl px-4 py-8">
+    <div className="container mx-auto mt-32 max-w-screen-xl px-4 py-8 md:mt-28">
       <div className="mb-6 flex flex-col justify-center gap-5">
         <Link
           to="/orders"

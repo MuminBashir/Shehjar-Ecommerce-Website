@@ -24,10 +24,10 @@ const Footer = () => {
       <footer className="container mx-auto mt-28 grid grid-cols-1 space-y-10 bg-primary px-5 py-8 tracking-wider text-white md:mt-28 md:grid-cols-4 md:space-y-0 xl:px-28 xl:py-20 ">
         {/* Shehjar */}
         <section className="space-y-4">
-          <h1 className="text-4xl font-black tracking-wider">Shehjar.</h1>
+          <h1 className="font-serif text-2xl font-black">S H E H J A R.</h1>
           <p className="w-2/3 text-sm font-light">
-            Explore the various kind of products crafted from the valley of
-            kashmir.
+            A women-led social enterprise preserving Kashmir's artistic
+            heritage.
           </p>
         </section>
 

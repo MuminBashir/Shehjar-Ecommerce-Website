@@ -63,14 +63,14 @@ const Orders = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto mt-20 flex justify-center px-4 py-16">
+      <div className="container mx-auto mt-32 flex justify-center px-4 py-16 md:mt-28">
         <Loading />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto mt-20 max-w-screen-xl px-4 py-8">
+    <div className="container mx-auto mt-32 max-w-screen-xl px-4 py-8 md:mt-28">
       <h1 className="mb-6 text-2xl font-bold">My Orders</h1>
 
       {orders.length === 0 ? (
