@@ -83,6 +83,11 @@ const Profile = () => {
   // Watch the country field to update states
   const watchedCountry = watch("country");
 
+  //initial load
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   // Update states/provinces when country changes
   useEffect(() => {
     if (watchedCountry && watchedCountry.value) {
@@ -270,7 +275,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="container mx-auto mt-32 max-w-screen-xl px-4 py-8 md:mt-28">
+    <div className="container mx-auto mt-32 min-h-[50vh] max-w-screen-xl px-4 py-8 md:mt-28">
       <h1 className="mb-8 text-3xl font-bold">My Account</h1>
 
       <div className="flex flex-col gap-8 md:flex-row">

@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+} from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { FiCheckCircle, FiBox, FiTruck, FiHome } from "react-icons/fi";
 
@@ -17,8 +24,13 @@ const Completion = () => {
           return;
         }
 
-        const orderDoc = await getDoc(doc(db, "orders", orderId));
-        if (orderDoc.exists()) {
+        // Query orders collection to find order by orderId
+        const ordersRef = collection(db, "orders");
+        const q = query(ordersRef, where("orderId", "==", orderId));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const orderDoc = querySnapshot.docs[0];
           setOrder({ id: orderDoc.id, ...orderDoc.data() });
         }
         setLoading(false);
@@ -70,7 +82,7 @@ const Completion = () => {
 
         <div className="mb-6 overflow-hidden rounded-lg border border-gray-200">
           <div className="bg-gray-50 px-6 py-4">
-            <h2 className="font-semibold">Order #{order.id.slice(-8)}</h2>
+            <h2 className="font-semibold">Order #{order.orderId}</h2>
           </div>
           <div className="p-6">
             <div className="mb-4 flex justify-between">

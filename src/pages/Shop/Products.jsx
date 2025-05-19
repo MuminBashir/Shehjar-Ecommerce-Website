@@ -10,7 +10,7 @@ const Products = () => {
   return (
     <div className="mt-32 md:mt-28">
       <Breadcrumb title="products" />
-      <section className="container relative mx-auto my-10 flex  px-5 ">
+      <section className="relative mx-auto my-10 flex max-w-full px-5 md:px-20">
         <Filters />
         <div className="w-full space-y-8 font-light  ">
           <AllProducts />

@@ -84,9 +84,7 @@ const Orders = () => {
             >
               <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
                 <div>
-                  <h2 className="font-medium">
-                    Order #{order.id.slice(-8).toUpperCase()}
-                  </h2>
+                  <h2 className="font-medium">Order #{order.orderId}</h2>
                   <p className="text-sm text-gray-500">
                     {formatDate(order.createdAt)}
                   </p>
@@ -178,7 +176,7 @@ const Orders = () => {
                   </div>
 
                   <Link
-                    to={`/orders/${order.id}`}
+                    to={`/orders/${order.orderId}`}
                     className="hover:text-primary-dark flex items-center text-sm font-medium text-primary"
                   >
                     View Details

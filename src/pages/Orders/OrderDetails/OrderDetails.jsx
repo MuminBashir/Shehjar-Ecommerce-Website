@@ -15,10 +15,12 @@ import {
   FiClock,
 } from "react-icons/fi";
 import { Loading } from "../../../components";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../../../firebase/config";
 
 const OrderDetailsPage = () => {
   const { id } = useParams();
-  const { orders, loading, getOrderById } = useOrders();
+  const { orders, loading } = useOrders();
   const [order, setOrder] = useState(null);
   const [orderLoading, setOrderLoading] = useState(true);
 
@@ -38,7 +40,7 @@ const OrderDetailsPage = () => {
     const fetchOrderDetails = async () => {
       try {
         // First check if the order is already in the orders array
-        const existingOrder = orders.find((o) => o.id === id);
+        const existingOrder = orders.find((o) => o.orderId === id);
 
         if (existingOrder) {
           setOrder(existingOrder);
@@ -46,9 +48,15 @@ const OrderDetailsPage = () => {
           return;
         }
 
-        // If not found in existing orders, fetch it directly
-        const fetchedOrder = await getOrderById(id);
-        setOrder(fetchedOrder);
+        // If not found in existing orders, fetch it directly using orderId
+        const ordersRef = collection(db, "orders");
+        const q = query(ordersRef, where("orderId", "==", id));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          const orderDoc = querySnapshot.docs[0];
+          setOrder({ id: orderDoc.id, ...orderDoc.data() });
+        }
         setOrderLoading(false);
       } catch (error) {
         console.error("Error fetching order details:", error);
@@ -59,7 +67,7 @@ const OrderDetailsPage = () => {
     if (!loading) {
       fetchOrderDetails();
     }
-  }, [id, orders, loading, getOrderById]);
+  }, [id, orders, loading]);
 
   // Format date function
   const formatDate = (timestamp) => {
@@ -126,9 +134,7 @@ const OrderDetailsPage = () => {
           <div className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
             <div className="bg-gray-50 px-6 py-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="font-semibold">
-                  Order #{order.id.slice(-8).toUpperCase()}
-                </h2>
+                <h2 className="font-semibold">Order #{order.orderId}</h2>
                 <div className="flex items-center">
                   <span className="mr-3 text-sm text-gray-600">
                     Placed on {formatDate(order.createdAt)}

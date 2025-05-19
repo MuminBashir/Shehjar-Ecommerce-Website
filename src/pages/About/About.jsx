@@ -53,7 +53,7 @@ const About = () => {
     {
       id: 1,
       name: "Assma W. Qureshi",
-      role: "Managing Director - Founder & CEO",
+      role: "Co-founder & CEO",
       image: ceoImg,
       bio: "Assma W. Qureshi, the Managing Director of Shehjar, is a passionate and visionary leader who has dedicated her life to the revival and global recognition of Kashmir's rich artisanal heritage. Holding a postgraduate degree in Literature and having spent many years working with humanitarian aid and development organizations, Assma brings a unique blend of empathy, insight, and purpose to her role. During her tenure with HELP (Human Effort for Love and Peace), one of Kashmir's most respected NGOs, she witnessed the deep scars left by conflict, disease, and social adversity—especially on women who had lost their families and livelihoods. Moved by their resilience and stories, Assma envisioned a platform that could empower these women through dignified, skilled work rooted in Kashmir's cultural identity. This vision led her to adopt Shehjar as her life's mission. Under her dedicated leadership, Shehjar has grown into an internationally recognized brand within just five to six years, offering not only exquisite Kashmiri crafts to global clientele but also a livelihood and voice to the women behind each piece.",
     },
@@ -67,7 +67,7 @@ const About = () => {
     {
       id: 3,
       name: "Rubby Jan",
-      role: "Operations Manager - Shehjar Food Centre",
+      role: "Sr. Manager - Operations",
       image: operationsManagerImg,
       bio: "Rubby Jan serves as the Operations Manager for the Shehjar Food Centre and is widely regarded as the backbone of its processing operations. With over eight years of dedicated service and a strong technical background, she holds specialized certification in food processing and brings hands-on expertise to every aspect of the unit's functioning. Rubby is responsible for managing the entire inventory at the Shehjar Complex, ensuring seamless coordination between procurement, processing, and dispatch. Her deep understanding of food safety, quality standards, and operational efficiency has been critical in upholding Shehjar's commitment to excellence and authenticity in its food products.",
     },

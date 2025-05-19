@@ -27,7 +27,7 @@ const Home = () => {
         <div className="md:hidden">
           <Carousel isMobile={true} />
         </div>
-        <div className="mx-auto my-10 flex max-w-7xl flex-col gap-10">
+        <div className="mx-auto my-10 flex max-w-full flex-col gap-10 md:px-32">
           <SaleBanner />
           <GenreList genre="NewArrival" title="NEW ARRIVALS" />
           <GenreList genre="BestSeller" title="BEST SELLERS" />

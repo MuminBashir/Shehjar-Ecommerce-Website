@@ -12,6 +12,7 @@ import { collection, query, orderBy, limit } from "firebase/firestore";
 import { db } from "../firebase/config";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
+import footerLogo from "../assets/footer_logo.jpeg";
 
 const Footer = () => {
   // Fetch top 3 artisans from Firestore, ordered by created_at (newest first)
@@ -21,13 +22,14 @@ const Footer = () => {
 
   return (
     <>
-      <footer className="container mx-auto mt-28 grid grid-cols-1 space-y-10 bg-primary px-5 py-8 tracking-wider text-white md:mt-28 md:grid-cols-4 md:space-y-0 xl:px-28 xl:py-20 ">
+      <footer className="mx-auto mt-28 grid max-w-full grid-cols-1 space-y-10 bg-primary px-5 py-8 tracking-wider text-white md:mt-28 md:grid-cols-4 md:space-y-0 xl:px-28 xl:py-20 ">
         {/* Shehjar */}
         <section className="space-y-4">
-          <h1 className="font-serif text-2xl font-black">S H E H J A R.</h1>
-          <p className="w-2/3 text-sm font-light">
-            A women-led social enterprise preserving Kashmir's artistic
-            heritage.
+          <img src={footerLogo} alt="SHEHJAR" width={250} />
+          <p className="ml-4 w-2/3 text-sm font-light">
+            At Shehjar, we weave dignity into every thread, carve pride into
+            every motif, and connect you with the soul of Kashmir — one
+            handcrafted piece at a time
           </p>
         </section>
 

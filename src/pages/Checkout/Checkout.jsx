@@ -16,9 +16,19 @@ import {
 } from "firebase/firestore";
 import { db } from "../../firebase/config";
 
+// Helper function to generate unique order ID
+const generateOrderId = () => {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let orderId = "";
+  for (let i = 0; i < 8; i++) {
+    orderId += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return orderId;
+};
+
 // Get API base URL from environment variables
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -233,7 +243,11 @@ const Checkout = () => {
         (addr) => addr.id === selectedAddressId
       );
 
+      // Generate unique order ID
+      const orderId = generateOrderId();
+
       const orderData = {
+        orderId, // Add the generated order ID
         userId: currentUser.uid,
         items: checkoutItems,
         deliveryAddress: selectedAddress,
@@ -255,15 +269,15 @@ const Checkout = () => {
 
       // Create the order document
       const orderRef = await addDoc(collection(db, "orders"), orderData);
-      const orderId = orderRef.id;
+      const firebaseOrderId = orderRef.id;
 
       // Update the user's orders array in Firestore
       const userRef = doc(db, "users", currentUser.uid);
       await updateDoc(userRef, {
-        orders: arrayUnion(orderId),
+        orders: arrayUnion(firebaseOrderId),
       });
 
-      return orderId;
+      return { orderId, firebaseOrderId }; // Return both IDs
     } catch (error) {
       console.error("Error creating order:", error);
       throw error;
@@ -370,7 +384,7 @@ const Checkout = () => {
 
             if (verificationData.verified) {
               // Payment successful, create order in Firebase
-              const orderId = await createOrder(
+              const { orderId, firebaseOrderId } = await createOrder(
                 response.razorpay_payment_id,
                 "completed"
               );
@@ -429,7 +443,7 @@ const Checkout = () => {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
-                    orderId: orderId,
+                    orderId,
                     notificationType: "order-confirmation",
                   }),
                 });

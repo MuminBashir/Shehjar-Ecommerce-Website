@@ -57,7 +57,7 @@ const CategoryList = () => {
   const totalCount = showAll ? allCategories.length : value?.docs.length || 0;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="mx-auto max-w-full px-4 py-8">
       <h2 className="my-5 font-serif text-4xl uppercase">Shop by category</h2>
 
       <motion.div
