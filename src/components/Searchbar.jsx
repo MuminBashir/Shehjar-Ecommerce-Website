@@ -240,10 +240,10 @@ const SearchBar = () => {
                     <span className="text-sm font-medium">
                       {highlightMatches(item.name)}
                     </span>
-                    {item.price !== undefined ? (
+                    {item.combinations[0].price !== undefined ? (
                       <span className="flex items-center gap-0.5 text-xs text-gray-600">
                         <IndianRupee size={12} className="inline" />
-                        {item.price}
+                        {item.combinations[0].price}
                       </span>
                     ) : (
                       <span className="text-xs text-gray-400">
