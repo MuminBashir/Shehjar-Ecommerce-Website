@@ -166,15 +166,8 @@ const AllProducts = () => {
         constraints.push(where("category_id", "==", categoryId));
       }
 
-      // Add price range filters if both min and max are set
-      if (price_range) {
-        if (min_price !== null) {
-          constraints.push(where("price", ">=", min_price));
-        }
-        if (max_price !== null) {
-          constraints.push(where("price", "<=", max_price));
-        }
-      }
+      // Note: Price range filtering is now handled client-side using combination prices
+      // Server-side filtering disabled because combinations have individual prices
 
       // Add search term filter if provided
       if (searchTerm) {
@@ -269,6 +262,15 @@ const AllProducts = () => {
   // Efficient count function using aggregation queries
   const fetchTotalCount = useCallback(async () => {
     try {
+      // If price filtering is active, we need to fetch all products and count client-side
+      // This is because price filtering now uses combination prices
+      if (price_range && (min_price !== null || max_price !== null)) {
+        // Set a placeholder count - actual count will be determined after fetching
+        setTotalItems(0);
+        setTotalPages(1);
+        return;
+      }
+
       // If we have genre IDs, we'll calculate count differently
       if (genreProductIds && genreProductIds.length > 0) {
         // For large genre lists, we need an estimated count
@@ -295,23 +297,6 @@ const AllProducts = () => {
             filteredCount = Math.round(
               genreProductIds.length * categoryPercentage
             );
-          }
-
-          // Apply price range filter estimation if needed
-          if (price_range && (min_price !== null || max_price !== null)) {
-            // Get percentage in price range (approximation)
-            const priceCountQuery = query(
-              collection(db, "products"),
-              ...(min_price !== null ? [where("price", ">=", min_price)] : []),
-              ...(max_price !== null ? [where("price", "<=", max_price)] : [])
-            );
-            const priceSnapshot = await getCountFromServer(priceCountQuery);
-            const totalProductsQuery = query(collection(db, "products"));
-            const totalSnapshot = await getCountFromServer(totalProductsQuery);
-
-            const pricePercentage =
-              priceSnapshot.data().count / totalSnapshot.data().count;
-            filteredCount = Math.round(filteredCount * pricePercentage);
           }
 
           // Apply search filter estimation if needed
@@ -342,15 +327,6 @@ const AllProducts = () => {
 
       if (categoryId) {
         constraints.push(where("category_id", "==", categoryId));
-      }
-
-      if (price_range) {
-        if (min_price !== null) {
-          constraints.push(where("price", ">=", min_price));
-        }
-        if (max_price !== null) {
-          constraints.push(where("price", "<=", max_price));
-        }
       }
 
       if (searchTerm) {
@@ -445,14 +421,7 @@ const AllProducts = () => {
             );
           }
 
-          if (price_range) {
-            if (min_price !== null) {
-              batchQuery = query(batchQuery, where("price", ">=", min_price));
-            }
-            if (max_price !== null) {
-              batchQuery = query(batchQuery, where("price", "<=", max_price));
-            }
-          }
+          // Price range filtering handled client-side for combination prices
 
           if (searchTerm) {
             // Use the same search tag approach
@@ -489,6 +458,24 @@ const AllProducts = () => {
           });
         }
 
+        // Apply client-side price filtering using combination prices
+        if (price_range && (min_price !== null || max_price !== null)) {
+          allProducts = allProducts.filter((product) => {
+            // Get the price from first combination or fallback to product price
+            const actualPrice =
+              product.combinations?.[0]?.price || product.price || 0;
+
+            let passesFilter = true;
+            if (min_price !== null && actualPrice < min_price) {
+              passesFilter = false;
+            }
+            if (max_price !== null && actualPrice > max_price) {
+              passesFilter = false;
+            }
+            return passesFilter;
+          });
+        }
+
         // Sort the combined results according to the selected sort option
         allProducts = sortProductsManually(
           allProducts,
@@ -496,7 +483,7 @@ const AllProducts = () => {
           sortDirection
         );
 
-        // Store the total count
+        // Store the total count after client-side filtering
         const filteredTotal = allProducts.length;
         setTotalItems(filteredTotal);
         setTotalPages(Math.ceil(filteredTotal / itemsPerPage));
@@ -535,7 +522,10 @@ const AllProducts = () => {
       let comparison;
 
       if (field === "price") {
-        comparison = a.price - b.price;
+        // Use first combination price if available, otherwise use product price
+        const priceA = a.combinations?.[0]?.price || a.price || 0;
+        const priceB = b.combinations?.[0]?.price || b.price || 0;
+        comparison = priceA - priceB;
       } else if (field === "name") {
         comparison = a.name.localeCompare(b.name);
       } else if (field === "created_at") {
@@ -605,6 +595,132 @@ const AllProducts = () => {
         if (genreProductIds && genreProductIds.length > 10) {
           const batchedProducts = await fetchProductsBatched(page);
           setProducts(batchedProducts);
+          setCurrentPage(page);
+          return;
+        }
+
+        // If price filtering is active, fetch more products and do client-side pagination
+        if (price_range && (min_price !== null || max_price !== null)) {
+          // Fetch a larger batch when price filtering is active
+          const largeBatchSize = 100; // Fetch more products to filter client-side
+
+          let baseQuery = collection(db, "products");
+          let constraints = [];
+
+          // Add category filter if selected
+          if (categoryId) {
+            constraints.push(where("category_id", "==", categoryId));
+          }
+
+          // Add search term filter if provided
+          if (searchTerm) {
+            const tagPrefix = searchTerm.substring(0, 2);
+            constraints.push(where("tag", "array-contains", tagPrefix));
+          }
+
+          // Add genre filter if applicable
+          if (
+            genreProductIds &&
+            genreProductIds.length > 0 &&
+            genreProductIds.length <= 10
+          ) {
+            constraints.push(where("__name__", "in", genreProductIds));
+          }
+
+          let sortField = "created_at";
+          let sortDirection = "desc";
+          switch (sort) {
+            case "price_lowest":
+            case "price_highest":
+              sortField = "created_at"; // Use created_at for sorting, will sort by price client-side
+              sortDirection = "desc";
+              break;
+            case "name_a_z":
+              sortField = "name";
+              sortDirection = "asc";
+              break;
+            case "name_z_a":
+              sortField = "name";
+              sortDirection = "desc";
+              break;
+            case "oldest":
+              sortField = "created_at";
+              sortDirection = "asc";
+              break;
+            default:
+              sortField = "created_at";
+              sortDirection = "desc";
+          }
+
+          let largeQuery;
+          if (constraints.length > 0) {
+            largeQuery = query(
+              baseQuery,
+              ...constraints,
+              orderBy(sortField, sortDirection),
+              limit(largeBatchSize)
+            );
+          } else {
+            largeQuery = query(
+              baseQuery,
+              orderBy(sortField, sortDirection),
+              limit(largeBatchSize)
+            );
+          }
+
+          const querySnapshot = await getDocs(largeQuery);
+          let productList = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          // Apply client-side filtering
+          if (searchTerm) {
+            productList = productList.filter((product) => {
+              if (!product.name) return false;
+              const productNameLower = product.name.toLowerCase();
+              const searchTerms = searchTerm.split(/\s+/);
+              return searchTerms.every((term) =>
+                productNameLower.includes(term)
+              );
+            });
+          }
+
+          // Apply price filtering
+          productList = productList.filter((product) => {
+            const actualPrice =
+              product.combinations?.[0]?.price || product.price || 0;
+            let passesFilter = true;
+            if (min_price !== null && actualPrice < min_price) {
+              passesFilter = false;
+            }
+            if (max_price !== null && actualPrice > max_price) {
+              passesFilter = false;
+            }
+            return passesFilter;
+          });
+
+          // Apply client-side sorting if needed
+          if (sort === "price_lowest" || sort === "price_highest") {
+            productList = sortProductsManually(
+              productList,
+              "price",
+              sort === "price_lowest" ? "asc" : "desc"
+            );
+          }
+
+          // Update total count after filtering
+          setTotalItems(productList.length);
+          setTotalPages(Math.ceil(productList.length / itemsPerPage));
+
+          // Apply client-side pagination
+          const startIndex = (page - 1) * itemsPerPage;
+          const paginatedProducts = productList.slice(
+            startIndex,
+            startIndex + itemsPerPage
+          );
+
+          setProducts(paginatedProducts);
           setCurrentPage(page);
           return;
         }
@@ -692,6 +808,24 @@ const AllProducts = () => {
             });
           }
 
+          // Apply client-side price filtering using combination prices
+          if (price_range && (min_price !== null || max_price !== null)) {
+            productList = productList.filter((product) => {
+              // Get the price from first combination or fallback to product price
+              const actualPrice =
+                product.combinations?.[0]?.price || product.price || 0;
+
+              let passesFilter = true;
+              if (min_price !== null && actualPrice < min_price) {
+                passesFilter = false;
+              }
+              if (max_price !== null && actualPrice > max_price) {
+                passesFilter = false;
+              }
+              return passesFilter;
+            });
+          }
+
           // Update state
           setProducts(productList);
           setCurrentPage(page);
@@ -770,6 +904,24 @@ const AllProducts = () => {
             // Split search term into words and check if all are in the product name
             const searchTerms = searchTerm.split(/\s+/);
             return searchTerms.every((term) => productNameLower.includes(term));
+          });
+        }
+
+        // Apply client-side price filtering using combination prices
+        if (price_range && (min_price !== null || max_price !== null)) {
+          productList = productList.filter((product) => {
+            // Get the price from first combination or fallback to product price
+            const actualPrice =
+              product.combinations?.[0]?.price || product.price || 0;
+
+            let passesFilter = true;
+            if (min_price !== null && actualPrice < min_price) {
+              passesFilter = false;
+            }
+            if (max_price !== null && actualPrice > max_price) {
+              passesFilter = false;
+            }
+            return passesFilter;
           });
         }
 

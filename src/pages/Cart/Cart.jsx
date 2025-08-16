@@ -64,7 +64,20 @@ const Cart = () => {
         const updatedCartProducts = cartItems
           .map((item) => {
             const product = productsMap[item.product_id];
-            return product ? { ...item, product } : null;
+            if (!product) return null;
+
+            // Ensure we have the price from cart item or calculate from combination
+            let itemPrice = item.price;
+            if (!itemPrice) {
+              // Fallback: get price from combination
+              const combination = product.combinations?.find(
+                (combo) =>
+                  combo.size === item.size && combo.color === item.color
+              );
+              itemPrice = combination?.price || product.price || 0;
+            }
+
+            return { ...item, product, price: itemPrice };
           })
           .filter((item) => item !== null);
 
@@ -97,10 +110,11 @@ const Cart = () => {
     products.forEach((item) => {
       const key = `${item.product_id}-${item.size}-${item.color}`;
       if (selectedState[key]) {
-        const product = item.product;
+        // Use the item's stored price (combination price)
+        const itemPrice = item.price || 0;
 
         // Calculate original price
-        const itemOriginalTotal = product.price * item.quantity;
+        const itemOriginalTotal = itemPrice * item.quantity;
         original += itemOriginalTotal;
 
         // Apply discount if applicable
@@ -109,7 +123,7 @@ const Cart = () => {
 
         if (isOnSale && currentSale?.discount_percentage) {
           const discountedPrice = Math.floor(
-            product.price * (1 - currentSale.discount_percentage / 100)
+            itemPrice * (1 - currentSale.discount_percentage / 100)
           );
           const itemDiscountedTotal = discountedPrice * item.quantity;
           discounted += itemDiscountedTotal;
@@ -169,7 +183,14 @@ const Cart = () => {
             selectedItems[`${item.product_id}-${item.size}-${item.color}`]
         )
         .map((item) => {
-          const { product, product_id, quantity, size, color } = item;
+          const {
+            product,
+            product_id,
+            quantity,
+            size,
+            color,
+            price: itemPrice,
+          } = item;
 
           return {
             product_id,
@@ -178,7 +199,7 @@ const Cart = () => {
             color,
             size,
             quantity,
-            price: product.price,
+            price: itemPrice || 0, // Use the stored combination price
           };
         });
 

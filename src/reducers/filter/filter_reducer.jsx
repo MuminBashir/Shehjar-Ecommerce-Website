@@ -35,10 +35,18 @@ const filter_reducer = (state, action) => {
       let tempProducts = [...filtered_products];
 
       if (sort === "price_lowest") {
-        tempProducts = tempProducts.sort((a, b) => a.price - b.price);
+        tempProducts = tempProducts.sort((a, b) => {
+          const priceA = a.combinations?.[0]?.price || a.price || 0;
+          const priceB = b.combinations?.[0]?.price || b.price || 0;
+          return priceA - priceB;
+        });
       }
       if (sort === "price_highest") {
-        tempProducts = tempProducts.sort((a, b) => b.price - a.price);
+        tempProducts = tempProducts.sort((a, b) => {
+          const priceA = a.combinations?.[0]?.price || a.price || 0;
+          const priceB = b.combinations?.[0]?.price || b.price || 0;
+          return priceB - priceA;
+        });
       }
       if (sort === "name_a_z") {
         tempProducts = tempProducts.sort((a, b) => {
@@ -88,17 +96,21 @@ const filter_reducer = (state, action) => {
         );
       }
 
-      // Filter by price range
+      // Filter by price range using combination price
       if (min_price !== null) {
-        tempFilteredProducts = tempFilteredProducts.filter(
-          (product) => product.price >= min_price
-        );
+        tempFilteredProducts = tempFilteredProducts.filter((product) => {
+          const actualPrice =
+            product.combinations?.[0]?.price || product.price || 0;
+          return actualPrice >= min_price;
+        });
       }
 
       if (max_price !== null) {
-        tempFilteredProducts = tempFilteredProducts.filter(
-          (product) => product.price <= max_price
-        );
+        tempFilteredProducts = tempFilteredProducts.filter((product) => {
+          const actualPrice =
+            product.combinations?.[0]?.price || product.price || 0;
+          return actualPrice <= max_price;
+        });
       }
 
       return { ...state, filtered_products: tempFilteredProducts };

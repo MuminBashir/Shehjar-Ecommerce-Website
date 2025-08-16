@@ -6,7 +6,14 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 
 const CartItem = ({ item, onRemove, isSelected, onToggleSelection }) => {
-  const { product, quantity, size, color, product_id } = item;
+  const {
+    product,
+    quantity,
+    size,
+    color,
+    product_id,
+    price: cartItemPrice,
+  } = item;
   const { updateCartItemQuantity } = useCart();
   const { currentSale, hasActiveSale } = useSale(); // Get sale information
 
@@ -23,7 +30,16 @@ const CartItem = ({ item, onRemove, isSelected, onToggleSelection }) => {
     ? currentSale?.discount_percentage || 0
     : 0;
 
-  const originalPrice = product.price;
+  // Use cart item price if available, otherwise fallback to combination price from product, then product price
+  const originalPrice =
+    cartItemPrice ||
+    (() => {
+      const combination = product.combinations?.find(
+        (combo) => combo.size === size && combo.color === color
+      );
+      return combination?.price || product.price || 0;
+    })();
+
   const discountedPrice = isOnSale
     ? Math.floor(originalPrice * (1 - discountPercentage / 100))
     : originalPrice;

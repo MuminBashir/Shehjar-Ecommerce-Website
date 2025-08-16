@@ -203,11 +203,27 @@ export const CartProvider = ({ children }) => {
           return;
         }
 
+        // Get the product data to extract the combination price
+        const productRef = doc(db, "products", productId);
+        const productSnap = await getDoc(productRef);
+        let combinationPrice = 0;
+
+        if (productSnap.exists()) {
+          const productData = productSnap.data();
+          // Find the specific combination to get its price
+          const combination = productData.combinations?.find(
+            (combo) =>
+              combo.size === selectedSize && combo.color === selectedColor
+          );
+          combinationPrice = combination?.price || productData.price || 0;
+        }
+
         const cartItem = {
           product_id: productId,
           size: selectedSize,
           color: selectedColor,
           quantity,
+          price: combinationPrice, // Store the combination price
           created_at: new Date().toISOString(),
         };
 

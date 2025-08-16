@@ -52,6 +52,7 @@ const SingleProduct = () => {
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [availableQuantity, setAvailableQuantity] = useState(0);
+  const [currentPrice, setCurrentPrice] = useState(0);
 
   // States for collapsible sections
   const [descriptionOpen, setDescriptionOpen] = useState(true);
@@ -72,15 +73,18 @@ const SingleProduct = () => {
       if (availableCombo) {
         setSelectedSize(availableCombo.size);
         setSelectedColor(availableCombo.color);
+        setCurrentPrice(availableCombo.price || productData.price || 0);
       } else {
         // No stock: default to first combination if available
         if (combinations.length > 0) {
           setSelectedSize(combinations[0].size);
           setSelectedColor(combinations[0].color);
+          setCurrentPrice(combinations[0].price || productData.price || 0);
         } else {
           // fallback if combinations are missing
           if (sizes.length > 0) setSelectedSize(sizes[0]);
           if (colors.length > 0) setSelectedColor(colors[0]);
+          setCurrentPrice(productData.price || 0);
         }
       }
     }
@@ -94,6 +98,11 @@ const SingleProduct = () => {
       );
 
       setAvailableQuantity(combination ? combination.quantity : 0);
+      setCurrentPrice(
+        combination
+          ? combination.price || productData.price || 0
+          : productData.price || 0
+      );
     }
   }, [product, selectedSize, selectedColor]);
 
@@ -145,10 +154,8 @@ const SingleProduct = () => {
   // Using Math.floor to round down to integer
   const discountPercentage = isOnSale ? currentSale.discount_percentage : 0;
   const discountedPrice = isOnSale
-    ? Math.floor(
-        productData.price - productData.price * (discountPercentage / 100)
-      )
-    : productData.price;
+    ? Math.floor(currentPrice - currentPrice * (discountPercentage / 100))
+    : currentPrice;
 
   const setColour = (color) => {
     setSelectedColor(color);
@@ -199,14 +206,14 @@ const SingleProduct = () => {
                 </p>
                 <p className="text-lg text-gray-500 line-through">
                   <IndianRupee size={16} className="inline text-gray-500" />
-                  {productData.price.toLocaleString()}
+                  {currentPrice.toLocaleString()}
                 </p>
                 <SaleBadge discountPercentage={discountPercentage} />
               </div>
             ) : (
               <p className="text-2xl font-semibold">
                 <IndianRupee size={20} className="inline" />
-                {productData.price.toLocaleString()}
+                {currentPrice.toLocaleString()}
               </p>
             )}
             {/* Fixed the nesting issue here */}
@@ -272,7 +279,7 @@ const SingleProduct = () => {
             availableQuantity={availableQuantity}
             productName={productData.name}
             productImage={productData.images ? productData.images[0] : ""}
-            productPrice={isOnSale ? discountedPrice : productData.price}
+            productPrice={isOnSale ? discountedPrice : currentPrice}
           />
 
           {/* Return Policy */}

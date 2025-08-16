@@ -14,13 +14,25 @@ const ProductCard = ({ product, listView }) => {
   const {
     id,
     name,
-    price,
+    price, // Keep for backward compatibility, but use combination price
     thumbnail_image,
     zoomed_thumbnail_image,
     combinations = [],
     is_certified,
     ratings = [],
   } = product;
+
+  const hoverImage = zoomed_thumbnail_image || thumbnail_image;
+
+  // Get the first available combination for quick add and pricing
+  const defaultCombination =
+    combinations && combinations.length > 0 ? combinations[0] : null;
+  const defaultSize = defaultCombination?.size || "";
+  const defaultColor = defaultCombination?.color || "";
+  const availableQuantity = defaultCombination?.quantity || 0;
+
+  // Use combination price if available, fallback to product price
+  const actualPrice = defaultCombination?.price || price || 0;
 
   // Check if this product is on sale
   const isOnSale =
@@ -32,17 +44,8 @@ const ProductCard = ({ product, listView }) => {
   // Using Math.floor to round down to integer
   const discountPercentage = isOnSale ? currentSale.discount_percentage : 0;
   const discountedPrice = isOnSale
-    ? Math.floor(price - price * (discountPercentage / 100))
-    : price;
-
-  const hoverImage = zoomed_thumbnail_image || thumbnail_image;
-
-  // Get the first available combination for quick add
-  const defaultCombination =
-    combinations && combinations.length > 0 ? combinations[0] : null;
-  const defaultSize = defaultCombination?.size || "";
-  const defaultColor = defaultCombination?.color || "";
-  const availableQuantity = defaultCombination?.quantity || 0;
+    ? Math.floor(actualPrice - actualPrice * (discountPercentage / 100))
+    : actualPrice;
 
   // Calculate average rating
   const calculateAverageRating = (ratings) => {
@@ -116,13 +119,13 @@ const ProductCard = ({ product, listView }) => {
                   </p>
                   <p className="flex items-center gap-1 text-sm text-gray-500 line-through">
                     <IndianRupee size={12} className="text-gray-500" />
-                    {price.toLocaleString()}
+                    {actualPrice.toLocaleString()}
                   </p>
                 </>
               ) : (
                 <p className="flex items-center gap-1 font-semibold text-gray-900">
                   <IndianRupee size={14} className="text-gray-900" />
-                  {price.toLocaleString()}
+                  {actualPrice.toLocaleString()}
                 </p>
               )}
             </div>
@@ -198,13 +201,13 @@ const ProductCard = ({ product, listView }) => {
                 </p>
                 <p className="flex items-center gap-1 text-sm text-gray-500 line-through">
                   <IndianRupee size={12} className="text-gray-500" />
-                  {price.toLocaleString()}
+                  {actualPrice.toLocaleString()}
                 </p>
               </>
             ) : (
               <p className="flex items-center gap-1 font-semibold text-gray-900">
                 <IndianRupee size={14} className="text-gray-900" />
-                {price.toLocaleString()}
+                {actualPrice.toLocaleString()}
               </p>
             )}
           </div>
