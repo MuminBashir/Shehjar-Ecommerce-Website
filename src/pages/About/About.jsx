@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Breadcrumb } from "../../components";
 import ceoImg from "../../assets/ceo.jpeg";
-import operationsManagerImg from "../../assets/operationsManager.jpeg";
+import founderImg from "../../assets/founder.jpeg";
 import executiveDirectorImg from "../../assets/executiveDirector.jpeg";
 import artisanWorkshopImg from "../../assets/artisanWorkshop.jpeg";
 import { X } from "lucide-react";
@@ -52,24 +52,24 @@ const About = () => {
   const teamMembers = [
     {
       id: 1,
+      name: "Mrs. Nighat Shafi",
+      role: "Founder",
+      image: founderImg,
+      bio: "Mrs. Nighat Shaf is the visionary force behind Shehjar — a pioneering women empowerment initiative founded in 1998 with a mission to uplift women affected by domestic violence and decades of unrest in Jammu & Kashmir. With unwavering resolve, she transformed Shehjar from a grassroots effort into a full-fledged organization committed to healing, educating, and empowering women who have long remained underrepresented and underserved. Born into the prestigious Drabu family — one of Kashmir’s most elite households — Nighat Shafi chose the path less traveled. Despite the comfort and privilege of her upbringing, including her Honours Degree in Literature and formative education at Presentation Convent, she gave up a life of ease to stand beside women who had lost everything to conflict, neglect, and violence. Her dedication quickly drew national and international attention. In 2000, she was nominated for the Nobel Peace Prize, a reflection of the impact of her relentless advocacy. She is a proud recipient of the Jamnalal Bajaj Award and numerous other prestigious honors from both governmental and global institutions. Today, Mrs. Nighat Shafi continues to live a life wholly devoted to justice, dignity, and empowerment for the women of Kashmir — a beacon of hope, compassion, and change in one of the most complex regions of the world.",
+    },
+    {
+      id: 2,
       name: "Assma W. Qureshi",
       role: "Co-founder & CEO",
       image: ceoImg,
       bio: "Assma W. Qureshi, the Managing Director of Shehjar, is a passionate and visionary leader who has dedicated her life to the revival and global recognition of Kashmir's rich artisanal heritage. Holding a postgraduate degree in Literature and having spent many years working with humanitarian aid and development organizations, Assma brings a unique blend of empathy, insight, and purpose to her role. During her tenure with HELP (Human Effort for Love and Peace), one of Kashmir's most respected NGOs, she witnessed the deep scars left by conflict, disease, and social adversity—especially on women who had lost their families and livelihoods. Moved by their resilience and stories, Assma envisioned a platform that could empower these women through dignified, skilled work rooted in Kashmir's cultural identity. This vision led her to adopt Shehjar as her life's mission. Under her dedicated leadership, Shehjar has grown into an internationally recognized brand within just five to six years, offering not only exquisite Kashmiri crafts to global clientele but also a livelihood and voice to the women behind each piece.",
     },
     {
-      id: 2,
+      id: 3,
       name: "Insha Hamid",
       role: "Executive Director - Finance & Sales",
       image: executiveDirectorImg,
       bio: "Insha Hamid brings a unique blend of strategic insight and human understanding to her role as Executive Director of Finance and Sales at Shehjar. With a Postgraduate degree in Psychology and over six years of hands-on experience in sales, Insha has consistently driven Shehjar's commercial growth while ensuring a deep connection with its customer base. Her journey with Shehjar spans several years, during which she has been instrumental in shaping the brand's market presence and financial structure. Insha's strong psychological acumen helps her anticipate consumer behavior, refine sales strategies, and build lasting customer relationships that reflect the authenticity and cultural essence of Shehjar. In addition to overseeing financial planning and sales operations, Insha plays a key role in product development cycles, pricing strategy, and retail expansion— anchoring Shehjar's vision of bringing Kashmir's timeless artistry to the global stage with economic sustainability and business resilience.",
-    },
-    {
-      id: 3,
-      name: "Rubby Jan",
-      role: "Sr. Manager - Operations",
-      image: operationsManagerImg,
-      bio: "Rubby Jan serves as the Operations Manager for the Shehjar Food Centre and is widely regarded as the backbone of its processing operations. With over eight years of dedicated service and a strong technical background, she holds specialized certification in food processing and brings hands-on expertise to every aspect of the unit's functioning. Rubby is responsible for managing the entire inventory at the Shehjar Complex, ensuring seamless coordination between procurement, processing, and dispatch. Her deep understanding of food safety, quality standards, and operational efficiency has been critical in upholding Shehjar's commitment to excellence and authenticity in its food products.",
     },
   ];
 

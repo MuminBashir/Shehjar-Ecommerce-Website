@@ -171,7 +171,7 @@ const ProductCard = ({ product, listView }) => {
   }
 
   return (
-    <div className="group flex min-w-[240px] max-w-[300px] flex-col bg-gray-50 pb-4">
+    <div className="group flex min-w-[240px] flex-col border border-gray-200 bg-gray-50 pb-4 md:max-w-[300px]">
       <Link to={`/shop/${id}`} className="block">
         <div
           className="relative h-64 overflow-hidden"
